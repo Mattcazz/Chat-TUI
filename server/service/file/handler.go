@@ -1,6 +1,6 @@
 package file
 
-import "net/http"
+import "github.com/go-chi/chi/v5"
 
 type Handler struct {
 	file_store FileStore
@@ -12,6 +12,6 @@ func NewHandler(fs FileStore) *Handler {
 	}
 }
 
-func (h *Handler) RegisterRoutes(m *http.ServeMux) {
+func (h *Handler) RegisterRoutes(r *chi.Mux) {
 
 }

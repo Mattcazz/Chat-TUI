@@ -5,6 +5,8 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
+
 	"go.mod/service/contact"
 	"go.mod/service/file"
 	"go.mod/service/msg"
@@ -23,7 +25,7 @@ func NewApiServer(addr string, db *sql.DB) *APIServer {
 }
 
 func (a *APIServer) Run() error {
-	r := http.NewServeMux()
+	r := chi.NewRouter()
 
 	contactStore := contact.NewStore(a.db)
 	contactHandler := contact.NewHandler(contactStore)
