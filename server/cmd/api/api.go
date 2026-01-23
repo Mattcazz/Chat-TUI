@@ -7,9 +7,9 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
-	"go.mod/service/contact"
 	"go.mod/service/file"
 	"go.mod/service/msg"
+	"go.mod/service/user"
 )
 
 type APIServer struct {
@@ -27,9 +27,9 @@ func NewApiServer(addr string, db *sql.DB) *APIServer {
 func (a *APIServer) Run() error {
 	r := chi.NewRouter()
 
-	contactStore := contact.NewStore(a.db)
-	contactHandler := contact.NewHandler(contactStore)
-	contactHandler.RegisterRoutes(r)
+	userStore := user.NewStore(a.db)
+	userHandler := user.NewHandler(userStore)
+	userHandler.RegisterRoutes(r)
 
 	fileStore := file.NewStore(a.db)
 	fileHandler := file.NewHandler(fileStore)

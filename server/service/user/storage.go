@@ -1,4 +1,4 @@
-package contact
+package user
 
 import "database/sql"
 
@@ -12,22 +12,22 @@ func NewStore(db *sql.DB) *Store {
 	}
 }
 
-func (s *Store) GetContactByID(id int) (*Contact, error) {
+func (s *Store) GetUserByID(id int) (*User, error) {
 	// Implementation goes here
 	return nil, nil
 }
 
-func (s *Store) CreateContact(c *Contact) error {
+func (s *Store) CreateUser(c *User) error {
 	// Implementation goes here
 	return nil
 }
 
-func (s *Store) UpdateContact(c *Contact) error {
+func (s *Store) UpdateUser(c *User) error {
 	// Implementation goes here
 	return nil
 }
 
-func (s *Store) DeleteContact(id int) error {
+func (s *Store) DeleteUser(id int) error {
 	// Implementation goes here
 	return nil
 }

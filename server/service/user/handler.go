@@ -1,14 +1,14 @@
-package contact
+package user
 
 import "github.com/go-chi/chi/v5"
 
 type Handler struct {
-	contact_store ContactStore
+	user_store UserStore
 }
 
-func NewHandler(cs ContactStore) *Handler {
+func NewHandler(cs UserStore) *Handler {
 	return &Handler{
-		contact_store: cs,
+		user_store: cs,
 	}
 }
 
