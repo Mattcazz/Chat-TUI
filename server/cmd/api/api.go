@@ -2,7 +2,6 @@ package main
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -39,6 +38,5 @@ func (a *APIServer) Run() error {
 	msgHandler := msg.NewHandler(msgStore)
 	msgHandler.RegisterRoutes(r)
 
-	log.Println("Listening on port ", a.addr)
 	return http.ListenAndServe(a.addr, r)
 }
