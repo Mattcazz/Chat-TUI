@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS users (
-    id BIGSERIAL PRIMARY KEY DEFAULT,
+CREATE TABLE users (
+    id BIGSERIAL PRIMARY KEY,
     username VARCHAR(25) UNIQUE NOT NULL,
     public_key TEXT NOT NULL, -- SSH public key
     fingerprint TEXT,         

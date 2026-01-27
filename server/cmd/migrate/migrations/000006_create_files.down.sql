@@ -1,1 +1,2 @@
 DROP TABLE IF EXISTS files CASCADE; 
+DROP TYPE IF EXISTS file_status;

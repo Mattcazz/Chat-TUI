@@ -1,6 +1,6 @@
 CREATE TYPE participant_role AS ENUM ('admin', 'member');
 
-CREATE TABLE IF NOT EXISTS conversation_participants (
+CREATE TABLE conversation_participants (
     conversation_id BIGINT REFERENCES conversations(id) ON DELETE CASCADE,
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     role participant_role DEFAULT 'member',

@@ -19,11 +19,11 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	dbHost := os.Getenv("HOST")
+	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("PG_USER")
 	dbPassword := os.Getenv("PASSWORD")
-	dbName := os.Getenv("DATABASE")
-	dbPort := os.Getenv("PORT")
+	dbName := os.Getenv("DB_NAME")
+	dbPort := os.Getenv("DB_PORT")
 
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName) //postgres://USER:PASSWORD@HOST:PORT/DATABASE?OPTIONS
 

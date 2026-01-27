@@ -17,5 +17,4 @@ func main() {
 		log.Fatal("Error running server")
 	}
 
-	log.Println("Listening on address ", addr)
 }

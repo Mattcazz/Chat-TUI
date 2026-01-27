@@ -2,6 +2,7 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
@@ -54,6 +55,8 @@ func (a *APIServer) Run() error {
 	msgService := msg.NewService(msgStore)
 	msgHandler := msg.NewHandler(msgService)
 	msgHandler.RegisterRoutes(r)
+
+	log.Println("Listening on address ", a.addr)
 
 	return http.ListenAndServe(a.addr, r)
 }
