@@ -3,12 +3,14 @@ package main
 import (
 	"database/sql"
 	"net/http"
+	"time"
 
+	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 
-	"go.mod/service/file"
-	"go.mod/service/msg"
-	"go.mod/service/user"
+	"go.mod/resources/file"
+	"go.mod/resources/msg"
+	"go.mod/resources/user"
 )
 
 type APIServer struct {
@@ -26,16 +28,30 @@ func NewApiServer(addr string, db *sql.DB) *APIServer {
 func (a *APIServer) Run() error {
 	r := chi.NewRouter()
 
+	// A good base middleware stack
+	r.Use(middleware.RequestID)
+	r.Use(middleware.RealIP)
+	r.Use(middleware.Logger)
+	r.Use(middleware.Recoverer)
+
+	// Set a timeout value on the request context (ctx), that will signal
+	// through ctx.Done() that the request has timed out and further
+	// processing should be stopped.
+	r.Use(middleware.Timeout(60 * time.Second))
+
 	userStore := user.NewStore(a.db)
-	userHandler := user.NewHandler(userStore)
+	userService := user.NewService(userStore)
+	userHandler := user.NewHandler(userService)
 	userHandler.RegisterRoutes(r)
 
 	fileStore := file.NewStore(a.db)
-	fileHandler := file.NewHandler(fileStore)
+	fileService := file.NewService(fileStore)
+	fileHandler := file.NewHandler(fileService)
 	fileHandler.RegisterRoutes(r)
 
 	msgStore := msg.NewStore(a.db)
-	msgHandler := msg.NewHandler(msgStore)
+	msgService := msg.NewService(msgStore)
+	msgHandler := msg.NewHandler(msgService)
 	msgHandler.RegisterRoutes(r)
 
 	return http.ListenAndServe(a.addr, r)
