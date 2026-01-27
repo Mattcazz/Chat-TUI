@@ -7,14 +7,15 @@ import (
 type Model struct {
 	text_input textinput.Model
 	err error
+	width int
+	height int
 }
 
 func New() Model {
 	ti := textinput.New()
 	ti.Placeholder = "Username"
 	ti.Focus()
-	ti.CharLimit = 20
-	ti.Width = 20
+	ti.CharLimit = 25
 
 	return Model{
 		text_input: ti,
