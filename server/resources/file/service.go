@@ -1,11 +1,11 @@
 package file
 
 type Service struct {
-	FileStore FileStore
+	fileRepo FileRepository
 }
 
-func NewService(fs FileStore) *Service {
+func NewService(fr FileRepository) *Service {
 	return &Service{
-		FileStore: fs,
+		fileRepo: fr,
 	}
 }

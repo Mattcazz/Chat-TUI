@@ -2,7 +2,7 @@ package user
 
 // temporary
 
-type UserStore interface {
+type UserRepository interface {
 	GetUserByID(id int) (*User, error)
 	CreateUser(c *User) error
 	UpdateUser(c *User) error
@@ -14,7 +14,7 @@ type User struct {
 	Username string
 }
 
-type ContactStore interface {
+type ContactRepository interface {
 	GetContactByID(id int) (*Contact, error)
 	CreateContact(c *Contact) error
 	UpdateContact(c *Contact) error

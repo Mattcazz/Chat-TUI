@@ -1,4 +1,4 @@
 package file
 
-type FileStore interface {
+type FileRepository interface {
 }

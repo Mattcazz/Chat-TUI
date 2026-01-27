@@ -2,12 +2,12 @@ package msg
 
 import "database/sql"
 
-type Store struct {
+type MsgStore struct {
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewMsgStore(db *sql.DB) *MsgStore {
+	return &MsgStore{
 		db: db,
 	}
 }

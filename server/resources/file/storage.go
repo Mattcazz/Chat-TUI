@@ -2,12 +2,12 @@ package file
 
 import "database/sql"
 
-type Store struct {
+type FileStore struct {
 	db *sql.DB
 }
 
-func NewStore(db *sql.DB) *Store {
-	return &Store{
+func NewFileStore(db *sql.DB) *FileStore {
+	return &FileStore{
 		db: db,
 	}
 }

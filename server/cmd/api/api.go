@@ -39,17 +39,18 @@ func (a *APIServer) Run() error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
-	userStore := user.NewStore(a.db)
-	userService := user.NewService(userStore)
+	userStore := user.NewUserStore(a.db)
+	contactStore := user.NewContactStore(a.db)
+	userService := user.NewService(userStore, contactStore)
 	userHandler := user.NewHandler(userService)
 	userHandler.RegisterRoutes(r)
 
-	fileStore := file.NewStore(a.db)
+	fileStore := file.NewFileStore(a.db)
 	fileService := file.NewService(fileStore)
 	fileHandler := file.NewHandler(fileService)
 	fileHandler.RegisterRoutes(r)
 
-	msgStore := msg.NewStore(a.db)
+	msgStore := msg.NewMsgStore(a.db)
 	msgService := msg.NewService(msgStore)
 	msgHandler := msg.NewHandler(msgService)
 	msgHandler.RegisterRoutes(r)

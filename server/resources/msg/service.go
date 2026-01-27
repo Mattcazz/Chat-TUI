@@ -1,11 +1,11 @@
 package msg
 
 type Service struct {
-	MsgStore MsgStore
+	msgRepo MsgRepository
 }
 
-func NewService(ms MsgStore) *Service {
+func NewService(msgRepo MsgRepository) *Service {
 	return &Service{
-		MsgStore: ms,
+		msgRepo: msgRepo,
 	}
 }

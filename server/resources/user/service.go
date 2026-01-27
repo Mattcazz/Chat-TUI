@@ -1,11 +1,13 @@
 package user
 
 type Service struct {
-	UserStore UserStore
+	userRepo    UserRepository
+	contactRepo ContactRepository
 }
 
-func NewService(us UserStore) *Service {
+func NewService(userRepo UserRepository, contactRepo ContactRepository) *Service {
 	return &Service{
-		UserStore: us,
+		userRepo:    userRepo,
+		contactRepo: contactRepo,
 	}
 }

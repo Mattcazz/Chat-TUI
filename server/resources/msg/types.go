@@ -1,4 +1,4 @@
 package msg
 
-type MsgStore interface {
+type MsgRepository interface {
 }
