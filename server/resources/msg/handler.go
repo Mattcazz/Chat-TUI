@@ -3,14 +3,15 @@ package msg
 import "github.com/go-chi/chi/v5"
 
 type Handler struct {
-	msg_store MsgStore
+	convService *Service
 }
 
-func NewHandler(ms MsgStore) *Handler {
+func NewHandler(s *Service) *Handler {
 	return &Handler{
-		msg_store: ms,
+		convService: s,
 	}
 }
 
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
+
 }
