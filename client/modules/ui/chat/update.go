@@ -1,12 +1,11 @@
-package login
+package chat
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func (m Model) Init() tea.Cmd {
-	return textinput.Blink
+	return nil
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -23,7 +22,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	}
 
-	m.text_input, cmd = m.text_input.Update(msg)
+	m.chat_input, cmd = m.chat_input.Update(msg)
 
 	return m, cmd
 }

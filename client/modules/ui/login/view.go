@@ -13,8 +13,6 @@ func (m Model) View() string {
 	)
 
 	style := lipgloss.NewStyle().
-	Width(m.text_input.CharLimit + 3 /* "> " + 1 because it behaves weirdly if it's exact or the wrong parity */).
-	Align(lipgloss.Center, lipgloss.Center).
 	BorderStyle(lipgloss.NormalBorder()).
 	BorderForeground(lipgloss.Color("#bbbbbb"))
 

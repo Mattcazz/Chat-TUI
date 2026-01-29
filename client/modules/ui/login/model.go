@@ -16,9 +16,15 @@ func New() Model {
 	ti.Placeholder = "Username"
 	ti.Focus()
 	ti.CharLimit = 25
+	ti.Width = 28
 
 	return Model{
 		text_input: ti,
 		err: nil,
 	}
 }
+
+ func (m *Model) SetSize(width int, height int) {
+	 m.width = width
+	 m.height = height
+ }

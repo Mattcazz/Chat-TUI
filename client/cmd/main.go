@@ -1,14 +1,14 @@
 package main
 
 import (
-	login_model "clit_client/modules/ui/login"
+	main_model "clit_client/internal/app"
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func main() {
-	p := tea.NewProgram(login_model.New(), tea.WithAltScreen())
+	p := tea.NewProgram(main_model.New(), tea.WithAltScreen())
 
 	_, err := p.Run();
 	if err != nil {

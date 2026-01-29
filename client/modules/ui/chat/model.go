@@ -1,11 +1,12 @@
-package login
+package chat
 
 import (
 	"github.com/charmbracelet/bubbles/textinput"
 )
 
 type Model struct {
-	text_input textinput.Model
+	// db probs //
+	chat_input textinput.Model
 	err error
 	width int
 	height int
@@ -13,12 +14,15 @@ type Model struct {
 
 func New() Model {
 	ti := textinput.New()
-	ti.Placeholder = "Username"
 	ti.Focus()
-	ti.CharLimit = 25
-
+	
 	return Model{
-		text_input: ti,
+		chat_input: ti,
 		err: nil,
 	}
 }
+
+ func (m *Model) SetSize(width int, height int) {
+	 m.width = width
+	 m.height = height
+ }
