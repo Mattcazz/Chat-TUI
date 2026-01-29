@@ -9,9 +9,9 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 
-	"go.mod/resources/file"
-	"go.mod/resources/msg"
-	"go.mod/resources/user"
+	"github.com/Mattcazz/Chat-TUI/server/resources/file"
+	"github.com/Mattcazz/Chat-TUI/server/resources/msg"
+	"github.com/Mattcazz/Chat-TUI/server/resources/user"
 )
 
 type APIServer struct {

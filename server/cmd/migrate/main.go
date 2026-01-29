@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/Mattcazz/Chat-TUI/server/db"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
-	"go.mod/db"
 )
 
 func main() {

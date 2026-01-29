@@ -1,6 +1,9 @@
 package user
 
-import "database/sql"
+import (
+	"context"
+	"database/sql"
+)
 
 type UserStore struct {
 	db *sql.DB
@@ -12,24 +15,44 @@ func NewUserStore(db *sql.DB) *UserStore {
 	}
 }
 
-func (s *UserStore) GetUserByID(id int) (*User, error) {
+func (s *UserStore) GetUserByID(ctx context.Context, id int64) (*User, error) {
 	// Implementation goes here
 	return nil, nil
 }
 
-func (s *UserStore) CreateUser(c *User) error {
+func (s *UserStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error) {
+	// Implementation goes here
+	return nil, nil
+}
+
+func (s *UserStore) CreateOrLoginUser(ctx context.Context, u *User) error {
+	var id int
+	query := `INSERT INTO users (username, public_key)
+          VALUES ($1, $2)
+          ON CONFLICT (username, public_key) DO NOTHING
+          RETURNING id`
+
+	err := s.db.QueryRowContext(ctx, query, u.Username, u.PublicKey).Scan(&id)
+
+	if err != nil && err != sql.ErrNoRows {
+		return err
+	}
+
+	return nil
+}
+
+func (s *UserStore) UpdateUser(ctx context.Context, c *User) error {
 	// Implementation goes here
 	return nil
 }
 
-func (s *UserStore) UpdateUser(c *User) error {
+func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
 	// Implementation goes here
 	return nil
 }
 
-func (s *UserStore) DeleteUser(id int) error {
-	// Implementation goes here
-	return nil
+func scanUser(row *sql.Row) (*User, error) {
+	return &User{}, nil
 }
 
 type ContactStore struct {
@@ -42,22 +65,27 @@ func NewContactStore(db *sql.DB) *ContactStore {
 	}
 }
 
-func (s *ContactStore) GetContactByID(id int) (*Contact, error) {
+func (s *ContactStore) GetContactByID(ctx context.Context, id int64) (*Contact, error) {
 	// Implementation goes here
 	return nil, nil
 }
 
-func (s *ContactStore) CreateContact(c *Contact) error {
+func (s *ContactStore) CreateContact(ctx context.Context, c *Contact) error {
 	// Implementation goes here
 	return nil
 }
 
-func (s *ContactStore) UpdateContact(c *Contact) error {
+func (s *ContactStore) UpdateContact(ctx context.Context, c *Contact) error {
 	// Implementation goes here
 	return nil
 }
 
-func (s *ContactStore) DeleteContact(id int) error {
+func (s *ContactStore) DeleteContact(ctx context.Context, id int64) error {
 	// Implementation goes here
 	return nil
+}
+
+func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([]*Contact, error) {
+	// Implementation goes here
+	return nil, nil
 }

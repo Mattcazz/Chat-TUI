@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"go.mod/db"
+	"github.com/Mattcazz/Chat-TUI/server/db"
 )
 
 func main() {
