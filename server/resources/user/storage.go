@@ -89,3 +89,25 @@ func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([
 	// Implementation goes here
 	return nil, nil
 }
+
+type ChallengeStore struct {
+	db *sql.DB
+}
+
+func NewChallengeStore(db *sql.DB) *ChallengeStore {
+	return &ChallengeStore{
+		db: db,
+	}
+}
+
+func (s *ChallengeStore) CreateChallenge(ctx context.Context, publicKey, nonce string) error {
+	return nil
+}
+
+func (s *ChallengeStore) GetNonceByPublicKey(ctx context.Context, publickey string) (string, error) {
+	return "", nil
+}
+
+func (s *ChallengeStore) DeleteChallenge(ctx context.Context, publicKey, nonce string) error {
+	return nil
+}

@@ -42,7 +42,8 @@ func (a *APIServer) Run() error {
 
 	userStore := user.NewUserStore(a.db)
 	contactStore := user.NewContactStore(a.db)
-	userService := user.NewService(userStore, contactStore)
+	challengeStore := user.NewChallengeStore(a.db)
+	userService := user.NewService(userStore, contactStore, challengeStore)
 	userHandler := user.NewHandler(userService)
 	userHandler.RegisterRoutes(r)
 

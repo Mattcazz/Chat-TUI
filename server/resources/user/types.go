@@ -31,3 +31,9 @@ type Contact struct {
 	UserID   int64
 	Username string
 }
+
+type ChallengeRepository interface {
+	CreateChallenge(ctx context.Context, publicKey, nonce string) error
+	GetNonceByPublicKey(ctx context.Context, publickey string) (string, error)
+	DeleteChallenge(ctx context.Context, publicKey, nonce string) error
+}
