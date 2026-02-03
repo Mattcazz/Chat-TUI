@@ -1,13 +1,15 @@
 package user
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 // temporary
 
 type UserRepository interface {
 	GetUserByID(ctx context.Context, id int64) (*User, error)
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error)
-	CreateOrLoginUser(ctx context.Context, u *User) error
 	UpdateUser(ctx context.Context, u *User) error
 	DeleteUser(ctx context.Context, id int64) error
 }
@@ -33,7 +35,13 @@ type Contact struct {
 }
 
 type ChallengeRepository interface {
-	CreateChallenge(ctx context.Context, publicKey, nonce string) error
-	GetNonceByPublicKey(ctx context.Context, publickey string) (string, error)
-	DeleteChallenge(ctx context.Context, publicKey, nonce string) error
+	CreateChallenge(ctx context.Context, challenge *Challenge) error
+	GetChallenge(ctx context.Context, id int64) (*Challenge, error)
+	DeleteChallenge(ctx context.Context, id int64, nonce string) error
+}
+
+type Challenge struct {
+	UserID    int64     `json:"user_id"`
+	Nonce     string    `json:"nonce"`
+	ExpiresAt time.Time `json:"expires_at"`
 }

@@ -22,23 +22,11 @@ func (s *UserStore) GetUserByID(ctx context.Context, id int64) (*User, error) {
 
 func (s *UserStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error) {
 	// Implementation goes here
-	return nil, nil
-}
+	query := `SELECT id, username, public_key FROM users WHERE public_key = $1`
 
-func (s *UserStore) CreateOrLoginUser(ctx context.Context, u *User) error {
-	var id int
-	query := `INSERT INTO users (username, public_key)
-          VALUES ($1, $2)
-          ON CONFLICT (username, public_key) DO NOTHING
-          RETURNING id`
+	row := s.db.QueryRowContext(ctx, query, publicKey)
 
-	err := s.db.QueryRowContext(ctx, query, u.Username, u.PublicKey).Scan(&id)
-
-	if err != nil && err != sql.ErrNoRows {
-		return err
-	}
-
-	return nil
+	return scanUser(row)
 }
 
 func (s *UserStore) UpdateUser(ctx context.Context, c *User) error {
@@ -52,7 +40,14 @@ func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
 }
 
 func scanUser(row *sql.Row) (*User, error) {
-	return &User{}, nil
+	user := new(User)
+
+	err := row.Scan(
+		&user.ID,
+		&user.Username,
+		&user.PublicKey)
+
+	return user, err
 }
 
 type ContactStore struct {
@@ -100,14 +95,38 @@ func NewChallengeStore(db *sql.DB) *ChallengeStore {
 	}
 }
 
-func (s *ChallengeStore) CreateChallenge(ctx context.Context, publicKey, nonce string) error {
-	return nil
+func (s *ChallengeStore) CreateChallenge(ctx context.Context, challenge *Challenge) error {
+
+	query := `INSERT INTO challenges (user_id, nonce, expires_at) VALUES ($1, $2, $3)`
+
+	_, err := s.db.ExecContext(ctx, query, challenge.UserID, challenge.Nonce, challenge.ExpiresAt)
+
+	return err
 }
 
-func (s *ChallengeStore) GetNonceByPublicKey(ctx context.Context, publickey string) (string, error) {
-	return "", nil
+func (s *ChallengeStore) GetChallenge(ctx context.Context, id int64) (*Challenge, error) {
+	query := `SELECT user_id, nonce, expires_at FROM challenges WHERE user_id = $1`
+
+	row := s.db.QueryRowContext(ctx, query, id)
+
+	return scanChallenge(row)
 }
 
-func (s *ChallengeStore) DeleteChallenge(ctx context.Context, publicKey, nonce string) error {
-	return nil
+func (s *ChallengeStore) DeleteChallenge(ctx context.Context, id int64, nonce string) error {
+	query := `DELETE FROM challenges WHERE user_id = $1 AND nonce = $2`
+
+	_, err := s.db.ExecContext(ctx, query, id, nonce)
+
+	return err
+}
+
+func scanChallenge(row *sql.Row) (*Challenge, error) {
+	challenge := new(Challenge)
+
+	err := row.Scan(
+		&challenge.UserID,
+		&challenge.Nonce,
+		&challenge.ExpiresAt)
+
+	return challenge, err
 }

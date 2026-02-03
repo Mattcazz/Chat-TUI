@@ -15,7 +15,7 @@ type userClaims struct {
 	jwt.RegisteredClaims
 }
 
-func CreateJWT(secret []byte, UserId int64) (string, error) {
+func CreateJWT(UserId int64) (string, error) {
 	claims := userClaims{
 		UserID: int64(UserId),
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -25,6 +25,8 @@ func CreateJWT(secret []byte, UserId int64) (string, error) {
 	}
 
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+
+	secret := os.Getenv("JWT_SECRET")
 
 	return token.SignedString(secret)
 }

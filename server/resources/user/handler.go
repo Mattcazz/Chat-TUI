@@ -39,34 +39,34 @@ func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
 	var req pkg.ChallengeRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.WriteJSON(w, 404, err.Error())
+		utils.WriteJSONError(w, 400, err)
 		return
 	}
 
 	nonce, err := h.service.GenerateChallenge(ctx, req.PublicKey)
 
 	if err != nil {
-		http.Error(w, "User not found", 404)
+		utils.WriteJSONError(w, 404, err)
 		return
 	}
 
 	resp := pkg.ChallengeResponse{Nonce: nonce}
 
-	json.NewEncoder(w).Encode(&resp)
+	utils.WriteJSON(w, 200, resp)
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	var req *pkg.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
-		utils.WriteJSON(w, 404, err.Error())
+		utils.WriteJSONError(w, 400, err)
 		return
 	}
 
 	token, err := h.service.VerifyAndLogin(r.Context(), req.PublicKey, req.Signature)
 
 	if err != nil {
-		utils.WriteJSON(w, 404, err.Error())
+		utils.WriteJSONError(w, 400, err)
 		return
 	}
 

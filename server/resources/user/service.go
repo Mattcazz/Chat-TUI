@@ -2,9 +2,11 @@ package user
 
 import (
 	"context"
-	"errors"
+	"fmt"
+	"time"
 
 	"github.com/Mattcazz/Chat-TUI/server/resources/middleware"
+	"github.com/Mattcazz/Chat-TUI/server/utils"
 )
 
 type Service struct {
@@ -21,20 +23,23 @@ func NewService(userRepo UserRepository, contactRepo ContactRepository, challeng
 	}
 }
 
-func (s *Service) CreateOrLoginUser(ctx context.Context, user *User) error {
-	return s.userRepo.CreateOrLoginUser(ctx, user)
-}
-
 func (s *Service) GenerateChallenge(ctx context.Context, publicKey string) (string, error) {
-	_, err := s.userRepo.GetUserByPublicKey(ctx, publicKey)
+	user, err := s.userRepo.GetUserByPublicKey(ctx, publicKey)
 
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("User does not exist")
 	}
 
-	nonce := generateRandomString(32)
+	nonce := utils.RandomString(32)
+	expires_at := time.Now().Add(5 * time.Minute)
 
-	s.challengeRepo.CreateChallenge(ctx, publicKey, nonce)
+	challenge := &Challenge{
+		UserID:    user.ID,
+		Nonce:     nonce,
+		ExpiresAt: expires_at,
+	}
+
+	s.challengeRepo.CreateChallenge(ctx, challenge)
 
 	return nonce, nil
 }
@@ -44,22 +49,24 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 	user, err := s.userRepo.GetUserByPublicKey(ctx, publicKey)
 
 	if err != nil {
-		return "", errors.New("User does not exist")
+		return "", fmt.Errorf("User does not exist")
 	}
 
-	nonce, err := s.challengeRepo.GetNonceByPublicKey(ctx, publicKey)
+	challenge, err := s.challengeRepo.GetChallenge(ctx, user.ID)
 
 	if err != nil {
-		return "", errors.New("Challenge not requested")
+		return "", fmt.Errorf("Challenge not created")
 	}
 
-	if !isValidSshSignature(nonce, publicKey, signature) {
-		return "", errors.New("Invalid signature")
+	if challenge.ExpiresAt.After(time.Now()) {
+		return "", fmt.Errorf("Challenge expired")
 	}
 
-	return middleware.CreateJWT(nil, user.ID)
-}
+	if err := middleware.IsValidSshSignature(publicKey, challenge.Nonce, signature); err != nil {
+		return "", err
+	}
 
-func (s *Service) GetContacts(ctx context.Context, userId int64) ([]*Contact, error) {
-	return s.contactRepo.GetContactsByUserID(ctx, userId)
+	s.challengeRepo.DeleteChallenge(ctx, user.ID, challenge.Nonce)
+
+	return middleware.CreateJWT(user.ID)
 }
