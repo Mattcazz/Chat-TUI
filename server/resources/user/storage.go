@@ -15,6 +15,20 @@ func NewUserStore(db *sql.DB) *UserStore {
 	}
 }
 
+func (s *UserStore) CreateUser(ctx context.Context, u *User) (*User, error) {
+	query := `INSERT INTO users (username, public_key) VALUES ($1, $2) RETURNING id`
+
+	row := s.db.QueryRowContext(ctx, query, u.Username, u.PublicKey)
+
+	err := row.Scan(&u.ID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return u, nil
+}
+
 func (s *UserStore) GetUserByID(ctx context.Context, id int64) (*User, error) {
 	// Implementation goes here
 	return nil, nil
@@ -97,7 +111,7 @@ func NewChallengeStore(db *sql.DB) *ChallengeStore {
 
 func (s *ChallengeStore) CreateChallenge(ctx context.Context, challenge *Challenge) error {
 
-	query := `INSERT INTO challenges (user_id, nonce, expires_at) VALUES ($1, $2, $3)`
+	query := `INSERT INTO auth_challenges (user_id, nonce, expires_at) VALUES ($1, $2, $3)`
 
 	_, err := s.db.ExecContext(ctx, query, challenge.UserID, challenge.Nonce, challenge.ExpiresAt)
 
@@ -105,7 +119,7 @@ func (s *ChallengeStore) CreateChallenge(ctx context.Context, challenge *Challen
 }
 
 func (s *ChallengeStore) GetChallenge(ctx context.Context, id int64) (*Challenge, error) {
-	query := `SELECT user_id, nonce, expires_at FROM challenges WHERE user_id = $1`
+	query := `SELECT user_id, nonce, expires_at FROM auth_challenges WHERE user_id = $1`
 
 	row := s.db.QueryRowContext(ctx, query, id)
 
@@ -113,7 +127,7 @@ func (s *ChallengeStore) GetChallenge(ctx context.Context, id int64) (*Challenge
 }
 
 func (s *ChallengeStore) DeleteChallenge(ctx context.Context, id int64, nonce string) error {
-	query := `DELETE FROM challenges WHERE user_id = $1 AND nonce = $2`
+	query := `DELETE FROM auth_challenges WHERE user_id = $1 AND nonce = $2`
 
 	_, err := s.db.ExecContext(ctx, query, id, nonce)
 

@@ -25,12 +25,32 @@ func (h *Handler) RegisterRoutes(r *chi.Mux) {
 	r.Get("/inbox", h.getInbox)
 	r.Post("/", h.userChallenge)
 	r.Post("/login", h.login)
-
+	r.Post("/register", h.registerUser)
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", h.getContacts)
 		r.Post("/request", h.postContactRequest)
 		r.Patch("/{contact_id}", h.patchContact)
 	})
+}
+
+func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+
+	var req pkg.RegisterRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteJSONError(w, 400, err)
+		return
+	}
+
+	user, err := h.service.CreateUser(ctx, req.PublicKey, req.Username)
+
+	if err != nil {
+		utils.WriteJSONError(w, 400, err)
+		return
+	}
+
+	utils.WriteJSON(w, 200, user)
 }
 
 func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
@@ -46,6 +66,10 @@ func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
 	nonce, err := h.service.GenerateChallenge(ctx, req.PublicKey)
 
 	if err != nil {
+		if IsUserDoesNotExistError(err) {
+			utils.WriteJSONError(w, 308, err)
+			return
+		}
 		utils.WriteJSONError(w, 404, err)
 		return
 	}
@@ -56,9 +80,9 @@ func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
-	var req *pkg.LoginRequest
+	var req pkg.LoginRequest
 
-	if err := json.NewDecoder(r.Body).Decode(req); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, 400, err)
 		return
 	}
@@ -72,7 +96,7 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 	resp := pkg.LoginResponse{Token: token}
 
-	json.NewEncoder(w).Encode(resp)
+	utils.WriteJSON(w, 200, resp)
 }
 
 func (h *Handler) getInbox(w http.ResponseWriter, r *http.Request) {

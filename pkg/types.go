@@ -16,3 +16,8 @@ type LoginRequest struct {
 type LoginResponse struct {
 	Token string `json:"token"`
 }
+
+type RegisterRequest struct {
+	PublicKey string `json:"public_key"`
+	Username  string `json:"username"`
+}

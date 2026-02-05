@@ -8,6 +8,7 @@ import (
 // temporary
 
 type UserRepository interface {
+	CreateUser(ctx context.Context, u *User) (*User, error)
 	GetUserByID(ctx context.Context, id int64) (*User, error)
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error)
 	UpdateUser(ctx context.Context, u *User) error
@@ -44,4 +45,23 @@ type Challenge struct {
 	UserID    int64     `json:"user_id"`
 	Nonce     string    `json:"nonce"`
 	ExpiresAt time.Time `json:"expires_at"`
+}
+
+type UserDoesNotExistError struct {
+	Message string
+}
+
+func (e *UserDoesNotExistError) Error() string {
+	return e.Message
+}
+
+func NewUserDoesNotExistError() *UserDoesNotExistError {
+	return &UserDoesNotExistError{
+		Message: "User does not exist",
+	}
+}
+
+func IsUserDoesNotExistError(err error) bool {
+	_, ok := err.(*UserDoesNotExistError)
+	return ok
 }
