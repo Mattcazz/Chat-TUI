@@ -75,6 +75,8 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 
 	challenge, err := s.challengeRepo.GetChallenge(ctx, user.ID)
 
+	defer s.challengeRepo.DeleteChallenge(ctx, user.ID, challenge.Nonce)
+
 	if err != nil {
 		return "", fmt.Errorf("Challenge not created")
 	}
@@ -86,8 +88,6 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 	if err := middleware.IsValidSshSignature(publicKey, challenge.Nonce, signature); err != nil {
 		return "", err
 	}
-
-	s.challengeRepo.DeleteChallenge(ctx, user.ID, challenge.Nonce)
 
 	return middleware.CreateJWT(user.ID)
 }

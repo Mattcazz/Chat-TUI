@@ -10,7 +10,7 @@ type ChallengeResponse struct {
 
 type LoginRequest struct {
 	PublicKey string `json:"public_key"`
-	Signature string `json:"nonce"`
+	Signature string `json:"signature"`
 }
 
 type LoginResponse struct {
