@@ -22,7 +22,6 @@ type User struct {
 }
 
 type ContactRepository interface {
-	GetContactByID(ctx context.Context, id int64) (*Contact, error)
 	GetContactsByUserID(ctx context.Context, userID int64) ([]*Contact, error)
 	CreateContact(ctx context.Context, c *Contact) error
 	UpdateContact(ctx context.Context, c *Contact) error
@@ -30,9 +29,10 @@ type ContactRepository interface {
 }
 
 type Contact struct {
-	ID       int64
-	UserID   int64
-	Username string
+	ID         int64     `json:"id"`
+	UserID     int64     `json:"user_id"`
+	Nickname   string    `json:"nickname"`
+	Created_at time.Time `json:"created_at"`
 }
 
 type ChallengeRepository interface {

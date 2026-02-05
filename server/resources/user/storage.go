@@ -30,8 +30,11 @@ func (s *UserStore) CreateUser(ctx context.Context, u *User) (*User, error) {
 }
 
 func (s *UserStore) GetUserByID(ctx context.Context, id int64) (*User, error) {
-	// Implementation goes here
-	return nil, nil
+	query := `SELECT id, username, public_key FROM users WHERE id = $1`
+
+	row := s.db.QueryRowContext(ctx, query, id)
+
+	return scanUser(row)
 }
 
 func (s *UserStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error) {
@@ -44,13 +47,20 @@ func (s *UserStore) GetUserByPublicKey(ctx context.Context, publicKey string) (*
 }
 
 func (s *UserStore) UpdateUser(ctx context.Context, c *User) error {
-	// Implementation goes here
-	return nil
+	query := `UPDATE users SET username = $1, public_key = $2 WHERE id = $3`
+
+	_, err := s.db.ExecContext(ctx, query, c.Username, c.PublicKey, c.ID)
+
+	return err
 }
 
 func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
-	// Implementation goes here
-	return nil
+
+	query := `DELETE FROM users WHERE id = $1`
+
+	_, err := s.db.ExecContext(ctx, query, id)
+
+	return err
 }
 
 func scanUser(row *sql.Row) (*User, error) {
@@ -75,28 +85,76 @@ func NewContactStore(db *sql.DB) *ContactStore {
 }
 
 func (s *ContactStore) GetContactByID(ctx context.Context, id int64) (*Contact, error) {
-	// Implementation goes here
-	return nil, nil
+	query := `SELECT id, user_id, nickname, created_at FROM contacts WHERE id = $1`
+
+	row := s.db.QueryRowContext(ctx, query, id)
+
+	contact, err := scanContact(row)
+
+	return contact, err
 }
 
 func (s *ContactStore) CreateContact(ctx context.Context, c *Contact) error {
-	// Implementation goes here
-	return nil
+
+	query := `INSERT INTO contacts (user_id, contact_user_id, nickname) VALUES ($1, $2, $3)`
+
+	_, err := s.db.ExecContext(ctx, query, c.UserID, c.ID, c.Nickname)
+
+	return err
 }
 
 func (s *ContactStore) UpdateContact(ctx context.Context, c *Contact) error {
-	// Implementation goes here
 	return nil
 }
 
 func (s *ContactStore) DeleteContact(ctx context.Context, id int64) error {
-	// Implementation goes here
-	return nil
+	query := `DELETE FROM contacts WHERE id = $1`
+
+	_, err := s.db.ExecContext(ctx, query, id)
+
+	return err
 }
 
 func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([]*Contact, error) {
-	// Implementation goes here
-	return nil, nil
+
+	query := `SELECT id, user_id, nickname, created_at FROM contacts WHERE user_id = $1`
+
+	rows, err := s.db.QueryContext(ctx, query, userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var contacts []*Contact
+
+	for rows.Next() {
+
+		var contact Contact
+
+		err := rows.Scan(contact.ID, contact.UserID, contact.Nickname, contact.Created_at)
+
+		if err != nil {
+			return nil, err
+		}
+
+		contacts = append(contacts, &contact)
+	}
+
+	return contacts, nil
+}
+
+func scanContact(row *sql.Row) (*Contact, error) {
+	contact := new(Contact)
+
+	err := row.Scan(
+		&contact.ID,
+		&contact.UserID,
+		&contact.Nickname,
+		&contact.Created_at)
+
+	return contact, err
 }
 
 type ChallengeStore struct {
@@ -123,7 +181,11 @@ func (s *ChallengeStore) GetChallenge(ctx context.Context, id int64) (*Challenge
 
 	row := s.db.QueryRowContext(ctx, query, id)
 
-	return scanChallenge(row)
+	var challenge Challenge
+
+	err := row.Scan(challenge.UserID, challenge.Nonce, challenge.ExpiresAt)
+
+	return &challenge, err
 }
 
 func (s *ChallengeStore) DeleteChallenge(ctx context.Context, id int64, nonce string) error {
@@ -132,15 +194,4 @@ func (s *ChallengeStore) DeleteChallenge(ctx context.Context, id int64, nonce st
 	_, err := s.db.ExecContext(ctx, query, id, nonce)
 
 	return err
-}
-
-func scanChallenge(row *sql.Row) (*Challenge, error) {
-	challenge := new(Challenge)
-
-	err := row.Scan(
-		&challenge.UserID,
-		&challenge.Nonce,
-		&challenge.ExpiresAt)
-
-	return challenge, err
 }
