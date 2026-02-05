@@ -1,7 +1,8 @@
-package chat
+package input_box
 
 import (
 	"clit_client/internal/commands"
+	"time"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
@@ -19,12 +20,13 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.height = msg.Height
 	case tea.KeyMsg:
 		switch msg.Type {
+		case tea.KeyEnter:
+			cmd = commands.NewNewMessageCmd("nucieda", m.chat_input.Value(), time.Now())
+			m.chat_input.Reset()
+			return m, cmd
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 		}
-	case commands.NewMessageMsg:
-		m.chat_view, cmd = m.chat_view.Update(msg)
-		return m, cmd
 	}
 
 	m.chat_input, cmd = m.chat_input.Update(msg)

@@ -5,7 +5,14 @@ import (
 )
 
 func (m Model) View() string {
-	content := m.chat_input.View()
+	chat_view_content := m.chat_view.View()
+	chat_input_box_content := m.chat_input.View()
+
+	content := lipgloss.JoinVertical(
+		lipgloss.Center,
+		chat_view_content,
+		chat_input_box_content,
+	)
 
 	style := lipgloss.NewStyle().
 	BorderStyle(lipgloss.NormalBorder()).
@@ -13,7 +20,7 @@ func (m Model) View() string {
 
 	return lipgloss.Place(
 		m.width, m.height,
-		lipgloss.Center, lipgloss.Bottom,
+		lipgloss.Center, lipgloss.Center,
 		style.Render(content),
 	)
 }

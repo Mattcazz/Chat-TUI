@@ -14,6 +14,7 @@ type App struct {
 	login_model tea.Model
 	chat_model tea.Model
 
+	username string
 	err error
 	width int
 	height int
@@ -39,6 +40,10 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case commands.ChangeStateMsg:
 		m.state = msg.State
 		return m, nil
+	case commands.LoggedInMsg:
+		m.username = msg.Username
+		m.login_model, cmd = m.login_model.Update(commands.NewLoggedInCmd(""))
+		return m, cmd
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
