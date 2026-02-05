@@ -1,7 +1,7 @@
 CREATE TYPE file_status AS ENUM ('uploading', 'ready', 'expired');
 
-CREATE TABLE IF NOT EXISTS files (
-    id BIGSERIAL PRIMARY KEY DEFAULT,
+CREATE TABLE files (
+    id BIGSERIAL PRIMARY KEY,
     conversation_id BIGINT REFERENCES conversations(id) ON DELETE CASCADE,
     uploader_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,

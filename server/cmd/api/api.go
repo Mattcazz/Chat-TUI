@@ -2,15 +2,16 @@ package main
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 
-	"go.mod/resources/file"
-	"go.mod/resources/msg"
-	"go.mod/resources/user"
+	"github.com/Mattcazz/Chat-TUI/server/resources/file"
+	"github.com/Mattcazz/Chat-TUI/server/resources/msg"
+	"github.com/Mattcazz/Chat-TUI/server/resources/user"
 )
 
 type APIServer struct {
@@ -41,7 +42,8 @@ func (a *APIServer) Run() error {
 
 	userStore := user.NewUserStore(a.db)
 	contactStore := user.NewContactStore(a.db)
-	userService := user.NewService(userStore, contactStore)
+	challengeStore := user.NewChallengeStore(a.db)
+	userService := user.NewService(userStore, contactStore, challengeStore)
 	userHandler := user.NewHandler(userService)
 	userHandler.RegisterRoutes(r)
 
@@ -54,6 +56,8 @@ func (a *APIServer) Run() error {
 	msgService := msg.NewService(msgStore)
 	msgHandler := msg.NewHandler(msgService)
 	msgHandler.RegisterRoutes(r)
+
+	log.Println("Listening on address ", a.addr)
 
 	return http.ListenAndServe(a.addr, r)
 }

@@ -1,5 +1,5 @@
-CREATE TABLE IF NOT EXISTS uploaded_chunks (
-    id BIGSERIAL PRIMARY KEY DEFAULT,
+CREATE TABLE uploaded_chunks (
+    id BIGSERIAL PRIMARY KEY,
     upload_session_id BIGINT REFERENCES upload_sessions(id) ON DELETE CASCADE,
     chunk_index INT NOT NULL,
     size INT NOT NULL,

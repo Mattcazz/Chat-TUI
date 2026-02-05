@@ -1,6 +1,6 @@
 CREATE TYPE contact_status AS ENUM ('request', 'accepted', 'blocked');
 
-CREATE TABLE IF NOT EXISTS contacts (
+CREATE TABLE contacts (
     user_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     contact_id BIGINT REFERENCES users(id) ON DELETE CASCADE,
     nickname VARCHAR(100),

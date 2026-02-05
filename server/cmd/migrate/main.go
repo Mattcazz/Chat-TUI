@@ -5,11 +5,11 @@ import (
 	"log"
 	"os"
 
+	"github.com/Mattcazz/Chat-TUI/server/db"
 	"github.com/golang-migrate/migrate/v4"
 	"github.com/golang-migrate/migrate/v4/database/postgres"
 	_ "github.com/golang-migrate/migrate/v4/source/file"
 	"github.com/joho/godotenv"
-	"go.mod/db"
 )
 
 func main() {
@@ -19,11 +19,11 @@ func main() {
 		log.Fatalf("Error loading .env file: %v", err)
 	}
 
-	dbHost := os.Getenv("HOST")
+	dbHost := os.Getenv("DB_HOST")
 	dbUser := os.Getenv("PG_USER")
 	dbPassword := os.Getenv("PASSWORD")
-	dbName := os.Getenv("DATABASE")
-	dbPort := os.Getenv("PORT")
+	dbName := os.Getenv("DB_NAME")
+	dbPort := os.Getenv("DB_PORT")
 
 	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=disable", dbUser, dbPassword, dbHost, dbPort, dbName) //postgres://USER:PASSWORD@HOST:PORT/DATABASE?OPTIONS
 

@@ -1,7 +1,7 @@
 CREATE TYPE upload_status AS ENUM ('pending', 'uploading', 'assembling', 'completed');
 
-CREATE TABLE IF NOT EXISTS upload_sessions (
-    id BIGSERIAL PRIMARY KEY DEFAULT uuid_generate_v4(),
+CREATE TABLE upload_sessions (
+    id BIGSERIAL PRIMARY KEY,
     file_id BIGINT REFERENCES files(id) ON DELETE CASCADE,
     total_size BIGINT NOT NULL,
     chunk_size INT NOT NULL,
