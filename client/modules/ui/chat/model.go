@@ -11,6 +11,8 @@ type Model struct {
 	chat_view tea.Model
 	chat_input tea.Model
 
+	username string
+
 	err error
 	width int
 	height int

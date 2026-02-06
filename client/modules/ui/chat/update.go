@@ -23,8 +23,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case commands.NewMessageMsg:
+		msg.Author = m.username
 		m.chat_view, cmd = m.chat_view.Update(msg)
 		return m, cmd
+	case commands.LogInMsg:
+		m.username = msg.Username
+		return m, nil
 	}
 
 	m.chat_input, cmd = m.chat_input.Update(msg)
