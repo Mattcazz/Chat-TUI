@@ -7,9 +7,11 @@ import (
 func (m Model) View() string {
 	content := m.chat_input.View()
 
-	style := lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("#bbbbbb"))
+	style := lipgloss.NewStyle()
 
-	return style.Render(content)
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Left, lipgloss.Bottom,
+		style.Render(content),
+	)
 }

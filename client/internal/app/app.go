@@ -7,6 +7,7 @@ import (
 	"clit_client/types"
 
 	tea "github.com/charmbracelet/bubbletea"
+	"github.com/charmbracelet/lipgloss"
 )
 
 type App struct {
@@ -49,8 +50,15 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.width = msg.Width
 		m.height = msg.Height
 
+		msg.Width -= lipgloss.NormalBorder().GetLeftSize()
+		msg.Width -= lipgloss.NormalBorder().GetRightSize()
+		msg.Height -= lipgloss.NormalBorder().GetTopSize()
+		msg.Height -= lipgloss.NormalBorder().GetBottomSize()
+
 		m.login_model, _ = m.login_model.Update(msg)
 		m.chat_model, _ = m.chat_model.Update(msg)
+
+		return m, nil
 	}
 
 	switch m.state {
@@ -66,14 +74,26 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m App) View() string {
+	var model_content string
+
 	switch m.state {
 	case types.LoginView:
-		return m.login_model.View()
+		model_content = m.login_model.View()
 	case types.ChatView:
-		return m.chat_model.View()
+		model_content = m.chat_model.View()
+	default:
+		model_content = "Ya broke it"
 	}
 
-	return "Please kill yourself"
+	style := lipgloss.NewStyle().
+	BorderStyle(lipgloss.NormalBorder()).
+	BorderForeground(lipgloss.Color("#bbbbbb"))
+
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Center, lipgloss.Center,
+		style.Render(model_content),
+	)
 }
 
 
