@@ -1,4 +1,4 @@
-package chat
+package chat_view
 
 import (
 	"clit_client/internal/commands"
@@ -23,11 +23,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case commands.NewMessageMsg:
-		m.chat_view, cmd = m.chat_view.Update(msg)
-		return m, cmd
+		var newMsg Message
+		newMsg.author = msg.Author
+		newMsg.message = msg.Message
+		newMsg.timestamp = msg.Timestamp
+		m.messages = append(m.messages, newMsg)
 	}
-
-	m.chat_input, cmd = m.chat_input.Update(msg)
 
 	return m, cmd
 }

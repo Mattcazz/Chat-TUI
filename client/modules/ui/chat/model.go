@@ -1,23 +1,25 @@
 package chat
 
 import (
-	"github.com/charmbracelet/bubbles/textinput"
+	"clit_client/modules/ui/chat_view"
+	"clit_client/modules/ui/input_box"
+
+	tea "github.com/charmbracelet/bubbletea"
 )
 
 type Model struct {
-	// db probs //
-	chat_input textinput.Model
+	chat_view tea.Model
+	chat_input tea.Model
+
 	err error
 	width int
 	height int
 }
 
 func New() Model {
-	ti := textinput.New()
-	ti.Focus()
-	
 	return Model{
-		chat_input: ti,
+		chat_view: chat_view.New(),
+		chat_input: input_box.New(),
 		err: nil,
 	}
 }
