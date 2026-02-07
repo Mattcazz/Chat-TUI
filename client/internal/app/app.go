@@ -40,10 +40,11 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case commands.ChangeStateMsg:
 		m.state = msg.State
 		return m, nil
-	case commands.LoggedInMsg:
+	case commands.LogInMsg:
 		m.username = msg.Username
-		m.login_model, cmd = m.login_model.Update(commands.NewLoggedInCmd(""))
-		return m, cmd
+		// Check that log in was successful eventually, but
+		m.chat_model, _ = m.chat_model.Update(msg)
+		return m, commands.NewChangeStateCmd(types.ChatView)
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height

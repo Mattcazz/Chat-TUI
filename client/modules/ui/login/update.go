@@ -2,7 +2,6 @@ package login
 
 import (
 	"clit_client/internal/commands"
-	"clit_client/types"
 
 	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
@@ -19,12 +18,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
-	case commands.LoggedInMsg:
-		return m, commands.NewLoggedInCmd(m.text_input.Value())
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
-			return m, commands.NewChangeStateCmd(types.ChatView)
+			return m, commands.NewLogInCmd(m.text_input.Value())
+			// return m, commands.NewChangeStateCmd(types.ChatView)
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 		}
