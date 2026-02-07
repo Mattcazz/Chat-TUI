@@ -2,7 +2,6 @@ package user
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
@@ -30,8 +29,9 @@ func (h *Handler) RegisterRoutes(r *chi.Mux) {
 	r.Post("/register", h.registerUser)
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", middleware.JWTAuth(h.getContacts))
-		r.Post("/request", middleware.JWTAuth(h.postContactRequest))
-		r.Patch("/{contact_id}", middleware.JWTAuth(h.patchContact))
+		r.Post("/requests", middleware.JWTAuth(h.postContactRequest))
+		r.Get("/requests", middleware.JWTAuth(h.getContactRequests))
+		r.Patch("/", middleware.JWTAuth(h.patchContact))
 	})
 }
 
@@ -69,7 +69,7 @@ func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if IsUserDoesNotExistError(err) {
-			utils.WriteJSONError(w, http.StatusPermanentRedirect, err)
+			utils.WriteJsonMsg(w, http.StatusNotFound, err.Error())
 			return
 		}
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
@@ -108,17 +108,41 @@ func (h *Handler) getInbox(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) getContacts(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(utils.CtxKeyUserID)
 
-	if userID == nil {
-		utils.WriteJSONError(w, http.StatusBadRequest, fmt.Errorf("User ID not found in context"))
+	contacts, err := h.service.GetContacts(r.Context(), userID.(int64))
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
 	}
 
-	utils.WriteJSON(w, http.StatusOK, userID)
+	utils.WriteJSON(w, http.StatusOK, contacts)
 }
 
 func (h *Handler) postContactRequest(w http.ResponseWriter, r *http.Request) {
 
+	userID := r.Context().Value(utils.CtxKeyUserID)
+
+	var req pkg.PostContactRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err := h.service.ContactRequest(r.Context(), userID.(int64), req.PublicKey, req.Nickname)
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJsonMsg(w, http.StatusOK, "Contact request sent")
 }
 
 func (h *Handler) patchContact(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func (h *Handler) getContactRequests(w http.ResponseWriter, r *http.Request) {
+
 }

@@ -23,6 +23,10 @@ func WriteJSON(w http.ResponseWriter, status int, v any) {
 	json.NewEncoder(w).Encode(v)
 }
 
+func WriteJsonMsg(w http.ResponseWriter, status int, msg string) {
+	WriteJSON(w, status, map[string]string{"message": msg})
+}
+
 func WriteJSONError(w http.ResponseWriter, status int, err error) {
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(status)
@@ -47,4 +51,12 @@ func RandomString(length int) string {
 		result[i] = charset[random.Intn(len(charset))]
 	}
 	return string(result)
+}
+
+func StrictDecoder(r http.Request, v interface{}) error {
+	decoder := json.NewDecoder(r.Body)
+
+	decoder.DisallowUnknownFields()
+
+	return decoder.Decode(v)
 }

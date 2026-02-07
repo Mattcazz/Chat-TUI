@@ -94,17 +94,31 @@ func (s *ContactStore) GetContactByID(ctx context.Context, id int64) (*Contact, 
 	return contact, err
 }
 
+func (s *ContactStore) GetContactByPair(ctx context.Context, userID1, userID2 int64) (*Contact, error) {
+	query := `SELECT id, user_id, nickname, created_at FROM contacts WHERE user_id = $1 AND contact_user_id = $2`
+
+	row := s.db.QueryRowContext(ctx, query, userID1, userID2)
+
+	contact, err := scanContact(row)
+
+	return contact, err
+}
+
 func (s *ContactStore) CreateContact(ctx context.Context, c *Contact) error {
 
-	query := `INSERT INTO contacts (user_id, contact_user_id, nickname) VALUES ($1, $2, $3)`
+	query := `INSERT INTO contacts (user_id, contact_user_id, nickname, status, created_at) VALUES ($1, $2, $3, $4, $5)`
 
-	_, err := s.db.ExecContext(ctx, query, c.UserID, c.ID, c.Nickname)
+	_, err := s.db.ExecContext(ctx, query, c.UserID, c.ID, c.Nickname, c.Status, c.Created_at)
 
 	return err
 }
 
 func (s *ContactStore) UpdateContact(ctx context.Context, c *Contact) error {
-	return nil
+	query := `UPDATE contacts SET nickname = $1, status = $2 WHERE id = $3`
+
+	_, err := s.db.ExecContext(ctx, query, c.Nickname, c.Status, c.ID)
+
+	return err
 }
 
 func (s *ContactStore) DeleteContact(ctx context.Context, id int64) error {

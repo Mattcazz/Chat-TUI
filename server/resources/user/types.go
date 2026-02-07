@@ -5,8 +5,6 @@ import (
 	"time"
 )
 
-// temporary
-
 type UserRepository interface {
 	CreateUser(ctx context.Context, u *User) (*User, error)
 	GetUserByID(ctx context.Context, id int64) (*User, error)
@@ -23,16 +21,18 @@ type User struct {
 
 type ContactRepository interface {
 	GetContactsByUserID(ctx context.Context, userID int64) ([]*Contact, error)
+	GetContactByPair(ctx context.Context, userID1, userID2 int64) (*Contact, error)
 	CreateContact(ctx context.Context, c *Contact) error
 	UpdateContact(ctx context.Context, c *Contact) error
 	DeleteContact(ctx context.Context, id int64) error
 }
 
 type Contact struct {
-	ID         int64     `json:"id"`
-	UserID     int64     `json:"user_id"`
-	Nickname   string    `json:"nickname"`
-	Created_at time.Time `json:"created_at"`
+	ID         int64         `json:"id"`
+	UserID     int64         `json:"user_id"`
+	Nickname   string        `json:"nickname"`
+	Status     contactStatus `json:"status"`
+	Created_at time.Time     `json:"created_at"`
 }
 
 type ChallengeRepository interface {
@@ -65,3 +65,9 @@ func IsUserDoesNotExistError(err error) bool {
 	_, ok := err.(*UserDoesNotExistError)
 	return ok
 }
+
+type contactStatus string
+
+const StatusAccept contactStatus = "accepted"
+const StatusPending contactStatus = "pending"
+const StatusBlock contactStatus = "blocked"
