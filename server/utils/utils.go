@@ -53,7 +53,7 @@ func RandomString(length int) string {
 	return string(result)
 }
 
-func StrictDecoder(r http.Request, v interface{}) error {
+func StrictDecoder(r *http.Request, v interface{}) error {
 	decoder := json.NewDecoder(r.Body)
 
 	decoder.DisallowUnknownFields()

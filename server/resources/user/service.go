@@ -3,8 +3,10 @@ package user
 import (
 	"context"
 	"fmt"
+	"log"
 	"time"
 
+	"github.com/Mattcazz/Chat-TUI/pkg"
 	"github.com/Mattcazz/Chat-TUI/server/resources/middleware"
 	"github.com/Mattcazz/Chat-TUI/server/utils"
 )
@@ -36,6 +38,10 @@ func (s *Service) CreateUser(ctx context.Context, publicKey, username string) (*
 	}
 
 	return s.userRepo.CreateUser(ctx, u)
+}
+
+func (s *Service) DeleteUser(ctx context.Context, userID int64) error {
+	return s.userRepo.DeleteUser(ctx, userID)
 }
 
 func (s *Service) GenerateChallenge(ctx context.Context, publicKey string) (string, error) {
@@ -78,6 +84,7 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 	defer s.challengeRepo.DeleteChallenge(ctx, user.ID, challenge.Nonce)
 
 	if err != nil {
+		log.Printf("Error retrieving challenge for user %d: %v", user.ID, err)
 		return "", fmt.Errorf("Challenge not created")
 	}
 
@@ -92,15 +99,15 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 	return middleware.CreateJWT(user.ID)
 }
 
-func (s *Service) GetContacts(ctx context.Context, userID int64) ([]*Contact, error) {
-	contacts, _ := s.contactRepo.GetContactsByUserID(ctx, userID)
+func (s *Service) GetContacts(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
+	contacts, err := s.contactRepo.GetContactsByUserID(ctx, userID)
 
 	// if the query returns nil, we want to show that there are no contacts from this user
-	if contacts == nil {
-		return []*Contact{}, nil
+	if err == nil && contacts == nil {
+		return []*pkg.ContactDetails{}, nil
 	}
 
-	return contacts, nil
+	return contacts, err
 }
 
 func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, nickname string) error {
@@ -113,13 +120,19 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 
 	status := StatusPending
 
-	contact, err := s.contactRepo.GetContactByPair(ctx, fromUserID, toUser.ID)
+	contact, err := s.contactRepo.GetContactByPair(ctx, toUser.ID, fromUserID)
 
 	if err == nil && contact != nil {
 		// contact already exists, we accept the contact request (both ways)
 		contact.Status = StatusAccept
 		status = StatusAccept
-		return s.contactRepo.UpdateContact(ctx, contact)
+		contact.UpdatedAt = time.Now()
+
+		err = s.contactRepo.UpdateContact(ctx, contact)
+
+		if err != nil {
+			return err
+		}
 	}
 
 	if nickname == "" {
@@ -127,13 +140,25 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 	}
 
 	c := &Contact{
-		ID:         fromUserID,
-		UserID:     toUser.ID,
+		FromUserID: fromUserID,
+		ToUserID:   toUser.ID,
 		Nickname:   nickname,
 		Status:     status,
+		UpdatedAt:  time.Now(),
 		Created_at: time.Now(),
 	}
 
 	return s.contactRepo.CreateContact(ctx, c)
 
+}
+
+func (s *Service) GetContactRequests(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
+	contacts, err := s.contactRepo.GetContactRequestsByUserID(ctx, userID)
+
+	// if the query returns nil, we want to show that there are no contact requests to this user
+	if err == nil && contacts == nil {
+		return []*pkg.ContactDetails{}, nil
+	}
+
+	return contacts, err
 }

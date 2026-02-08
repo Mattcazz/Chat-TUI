@@ -3,6 +3,9 @@ package user
 import (
 	"context"
 	"database/sql"
+	"log"
+
+	"github.com/Mattcazz/Chat-TUI/pkg"
 )
 
 type UserStore struct {
@@ -84,18 +87,8 @@ func NewContactStore(db *sql.DB) *ContactStore {
 	}
 }
 
-func (s *ContactStore) GetContactByID(ctx context.Context, id int64) (*Contact, error) {
-	query := `SELECT id, user_id, nickname, created_at FROM contacts WHERE id = $1`
-
-	row := s.db.QueryRowContext(ctx, query, id)
-
-	contact, err := scanContact(row)
-
-	return contact, err
-}
-
 func (s *ContactStore) GetContactByPair(ctx context.Context, userID1, userID2 int64) (*Contact, error) {
-	query := `SELECT id, user_id, nickname, created_at FROM contacts WHERE user_id = $1 AND contact_user_id = $2`
+	query := `SELECT id, from_user_id, to_user_id, nickname, created_at FROM contacts WHERE from_user_id = $1 AND to_user_id = $2`
 
 	row := s.db.QueryRowContext(ctx, query, userID1, userID2)
 
@@ -106,17 +99,19 @@ func (s *ContactStore) GetContactByPair(ctx context.Context, userID1, userID2 in
 
 func (s *ContactStore) CreateContact(ctx context.Context, c *Contact) error {
 
-	query := `INSERT INTO contacts (user_id, contact_user_id, nickname, status, created_at) VALUES ($1, $2, $3, $4, $5)`
+	query := `INSERT INTO contacts (from_user_id, to_user_id, nickname, status, created_at) VALUES ($1, $2, $3, $4::contact_status, $5)`
 
-	_, err := s.db.ExecContext(ctx, query, c.UserID, c.ID, c.Nickname, c.Status, c.Created_at)
+	_, err := s.db.ExecContext(ctx, query, c.FromUserID, c.ToUserID, c.Nickname, c.Status, c.Created_at)
 
 	return err
 }
 
 func (s *ContactStore) UpdateContact(ctx context.Context, c *Contact) error {
-	query := `UPDATE contacts SET nickname = $1, status = $2 WHERE id = $3`
+	query := `UPDATE contacts SET nickname = $1, status = $2::contact_status, updated_at = $3 WHERE id = $4`
 
-	_, err := s.db.ExecContext(ctx, query, c.Nickname, c.Status, c.ID)
+	log.Printf("Updating contact %d: nickname=%s, status=%s", c.ID, c.Nickname, c.Status)
+
+	_, err := s.db.ExecContext(ctx, query, c.Nickname, c.Status, c.UpdatedAt, c.ID)
 
 	return err
 }
@@ -129,10 +124,13 @@ func (s *ContactStore) DeleteContact(ctx context.Context, id int64) error {
 	return err
 }
 
-func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([]*Contact, error) {
-
-	query := `SELECT id, user_id, nickname, created_at FROM contacts WHERE user_id = $1`
-
+func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
+	query := `
+		SELECT c.nickname, u.public_key, c.created_at
+		FROM contacts c
+		JOIN users u ON c.to_user_id = u.id
+		WHERE c.from_user_id = $1 AND c.status = 'accepted'		
+	`
 	rows, err := s.db.QueryContext(ctx, query, userID)
 
 	if err != nil {
@@ -141,19 +139,50 @@ func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([
 
 	defer rows.Close()
 
-	var contacts []*Contact
+	var contacts []*pkg.ContactDetails
 
 	for rows.Next() {
-
-		var contact Contact
-
-		err := rows.Scan(contact.ID, contact.UserID, contact.Nickname, contact.Created_at)
-
-		if err != nil {
+		contact := new(pkg.ContactDetails)
+		if err := rows.Scan(&contact.Username, &contact.PublicKey, &contact.CreatedAt); err != nil {
 			return nil, err
 		}
+		contacts = append(contacts, contact)
+	}
 
-		contacts = append(contacts, &contact)
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return contacts, nil
+}
+
+func (s *ContactStore) GetContactRequestsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
+	query := `
+		SELECT u.username, u.public_key, c.created_at
+		FROM contacts c
+		JOIN users u ON c.from_user_id = u.id
+		WHERE c.to_user_id = $1 AND c.status = 'pending'		
+	`
+	rows, err := s.db.QueryContext(ctx, query, userID)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	var contacts []*pkg.ContactDetails
+
+	for rows.Next() {
+		contact := new(pkg.ContactDetails)
+		if err := rows.Scan(&contact.Username, &contact.PublicKey, &contact.CreatedAt); err != nil {
+			return nil, err
+		}
+		contacts = append(contacts, contact)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, err
 	}
 
 	return contacts, nil
@@ -164,7 +193,8 @@ func scanContact(row *sql.Row) (*Contact, error) {
 
 	err := row.Scan(
 		&contact.ID,
-		&contact.UserID,
+		&contact.FromUserID,
+		&contact.ToUserID,
 		&contact.Nickname,
 		&contact.Created_at)
 
@@ -197,7 +227,7 @@ func (s *ChallengeStore) GetChallenge(ctx context.Context, id int64) (*Challenge
 
 	var challenge Challenge
 
-	err := row.Scan(challenge.UserID, challenge.Nonce, challenge.ExpiresAt)
+	err := row.Scan(&challenge.UserID, &challenge.Nonce, &challenge.ExpiresAt)
 
 	return &challenge, err
 }

@@ -27,11 +27,12 @@ func (h *Handler) RegisterRoutes(r *chi.Mux) {
 	r.Post("/", h.userChallenge)
 	r.Post("/login", h.login)
 	r.Post("/register", h.registerUser)
+	r.Post("/delete", middleware.JWTAuth(h.deleteUser))
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", middleware.JWTAuth(h.getContacts))
 		r.Post("/requests", middleware.JWTAuth(h.postContactRequest))
 		r.Get("/requests", middleware.JWTAuth(h.getContactRequests))
-		r.Patch("/", middleware.JWTAuth(h.patchContact))
+		r.Post("/block", middleware.JWTAuth(h.blockContact))
 	})
 }
 
@@ -42,6 +43,11 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if req.Username == "" || req.PublicKey == "" {
+		utils.WriteJsonMsg(w, http.StatusBadRequest, "Username and public key are required")
 		return
 	}
 
@@ -69,7 +75,7 @@ func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		if IsUserDoesNotExistError(err) {
-			utils.WriteJsonMsg(w, http.StatusNotFound, err.Error())
+			utils.WriteJsonMsg(w, http.StatusTemporaryRedirect, err.Error())
 			return
 		}
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
@@ -102,7 +108,20 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getInbox(w http.ResponseWriter, r *http.Request) {
+	// TODO: Implement this handler to return the user's inbox
+}
 
+func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(utils.CtxKeyUserID)
+
+	err := h.service.DeleteUser(r.Context(), userID.(int64))
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJsonMsg(w, http.StatusOK, "User deleted")
 }
 
 func (h *Handler) getContacts(w http.ResponseWriter, r *http.Request) {
@@ -139,10 +158,19 @@ func (h *Handler) postContactRequest(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJsonMsg(w, http.StatusOK, "Contact request sent")
 }
 
-func (h *Handler) patchContact(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) getContactRequests(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(utils.CtxKeyUserID)
 
+	contacts, err := h.service.GetContactRequests(r.Context(), userID.(int64))
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, contacts)
 }
 
-func (h *Handler) getContactRequests(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) blockContact(w http.ResponseWriter, r *http.Request) {
 
 }

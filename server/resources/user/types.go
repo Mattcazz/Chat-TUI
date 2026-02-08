@@ -3,6 +3,8 @@ package user
 import (
 	"context"
 	"time"
+
+	"github.com/Mattcazz/Chat-TUI/pkg"
 )
 
 type UserRepository interface {
@@ -20,8 +22,9 @@ type User struct {
 }
 
 type ContactRepository interface {
-	GetContactsByUserID(ctx context.Context, userID int64) ([]*Contact, error)
+	GetContactsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error)
 	GetContactByPair(ctx context.Context, userID1, userID2 int64) (*Contact, error)
+	GetContactRequestsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error)
 	CreateContact(ctx context.Context, c *Contact) error
 	UpdateContact(ctx context.Context, c *Contact) error
 	DeleteContact(ctx context.Context, id int64) error
@@ -29,9 +32,11 @@ type ContactRepository interface {
 
 type Contact struct {
 	ID         int64         `json:"id"`
-	UserID     int64         `json:"user_id"`
+	FromUserID int64         `json:"from_user_id"`
+	ToUserID   int64         `json:"to_user_id"`
 	Nickname   string        `json:"nickname"`
 	Status     contactStatus `json:"status"`
+	UpdatedAt  time.Time     `json:"updated_at"`
 	Created_at time.Time     `json:"created_at"`
 }
 

@@ -1,5 +1,7 @@
 package pkg
 
+import "time"
+
 type ChallengeRequest struct {
 	PublicKey string `json:"public_key"`
 }
@@ -27,7 +29,6 @@ type PatchUserRequest struct {
 }
 
 type PostContactRequest struct {
-	ID        int64  `json:"id"`
 	PublicKey string `json:"public_key"`
 	Nickname  string `json:"nickname"`
 }
@@ -35,4 +36,10 @@ type PostContactRequest struct {
 type PatchContactRequest struct {
 	Nickname string `json:"nickname"`
 	Status   string `json:"status"`
+}
+
+type ContactDetails struct {
+	Username  string    `json:"username"`
+	PublicKey string    `json:"public_key"`
+	CreatedAt time.Time `json:"created_at"`
 }
