@@ -28,9 +28,11 @@ func (m Model) View() string {
 		content.WriteByte('\n')
 	}
 
-	var style = lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("#bbbbbb"))
+	var style = lipgloss.NewStyle()
 
-	return style.Render(content.String())
+	return lipgloss.Place(
+		m.width, m.height,
+		lipgloss.Left, lipgloss.Bottom,
+		style.Render(content.String()),
+	)
 }

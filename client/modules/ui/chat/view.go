@@ -1,6 +1,8 @@
 package chat
 
 import (
+	"clit_client/styles"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -10,13 +12,11 @@ func (m Model) View() string {
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
-		chat_view_content,
-		chat_input_box_content,
+		styles.Default.Border.Render(chat_view_content),
+		styles.Default.Border.Render(chat_input_box_content),
 	)
 
-	style := lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("#bbbbbb"))
+	style := lipgloss.NewStyle()
 
 	return lipgloss.Place(
 		m.width, m.height,
