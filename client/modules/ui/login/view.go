@@ -1,6 +1,8 @@
 package login
 
 import (
+	"clit_client/styles"
+
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -12,13 +14,9 @@ func (m Model) View() string {
 		m.text_input.View(),
 	)
 
-	style := lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("#bbbbbb"))
-
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		style.Render(content),
+		styles.Default.Border.Render(content),
 	)
 }

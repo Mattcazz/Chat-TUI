@@ -4,6 +4,7 @@ import (
 	"clit_client/internal/commands"
 	"clit_client/modules/ui/chat"
 	"clit_client/modules/ui/login"
+	"clit_client/styles"
 	"clit_client/types"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -85,14 +86,10 @@ func (m App) View() string {
 		model_content = "Ya broke it"
 	}
 
-	style := lipgloss.NewStyle().
-	BorderStyle(lipgloss.NormalBorder()).
-	BorderForeground(lipgloss.Color("#bbbbbb"))
-
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		style.Render(model_content),
+		styles.Default.Border.Render(model_content),
 	)
 }
 
