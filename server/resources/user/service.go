@@ -162,3 +162,25 @@ func (s *Service) GetContactRequests(ctx context.Context, userID int64) ([]*pkg.
 
 	return contacts, err
 }
+
+func (s *Service) BlockContact(ctx context.Context, userID, contactID int64) error {
+
+	c := &Contact{
+		ID:        contactID,
+		Status:    StatusBlocked,
+		UpdatedAt: time.Now(),
+	}
+
+	return s.contactRepo.UpdateContact(ctx, c)
+}
+
+func (s *Service) UnblockContact(ctx context.Context, userID, contactID int64) error {
+
+	c := &Contact{
+		ID:        contactID,
+		Status:    StatusAccept,
+		UpdatedAt: time.Now(),
+	}
+
+	return s.contactRepo.UpdateContact(ctx, c)
+}

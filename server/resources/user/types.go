@@ -75,4 +75,4 @@ type contactStatus string
 
 const StatusAccept contactStatus = "accepted"
 const StatusPending contactStatus = "pending"
-const StatusBlock contactStatus = "blocked"
+const StatusBlocked contactStatus = "blocked"

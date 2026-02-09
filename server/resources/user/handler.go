@@ -3,6 +3,7 @@ package user
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
 
@@ -24,15 +25,16 @@ func NewHandler(s *Service) *Handler {
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
 
 	r.Get("/inbox", middleware.JWTAuth(h.getInbox))
-	r.Post("/", h.userChallenge)
+	r.Post("/auth", h.userChallenge)
 	r.Post("/login", h.login)
 	r.Post("/register", h.registerUser)
-	r.Post("/delete", middleware.JWTAuth(h.deleteUser))
+	r.Delete("/delete", middleware.JWTAuth(h.deleteUser))
 	r.Route("/contacts", func(r chi.Router) {
 		r.Get("/", middleware.JWTAuth(h.getContacts))
 		r.Post("/requests", middleware.JWTAuth(h.postContactRequest))
 		r.Get("/requests", middleware.JWTAuth(h.getContactRequests))
-		r.Post("/block", middleware.JWTAuth(h.blockContact))
+		r.Post("/{contact_id}/block", middleware.JWTAuth(h.blockContact))
+		r.Post("/{contact_id}/unblock", middleware.JWTAuth(h.unblockContact))
 	})
 }
 
@@ -172,5 +174,43 @@ func (h *Handler) getContactRequests(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) blockContact(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(utils.CtxKeyUserID)
 
+	contactIDStr := chi.URLParam(r, "contact_id")
+
+	contactID, err := strconv.Atoi(contactIDStr)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.service.BlockContact(r.Context(), userID.(int64), int64(contactID))
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJsonMsg(w, http.StatusOK, "Contact blocked")
+}
+
+func (h *Handler) unblockContact(w http.ResponseWriter, r *http.Request) {
+	userID := r.Context().Value(utils.CtxKeyUserID)
+
+	contactIDStr := chi.URLParam(r, "contact_id")
+
+	contactID, err := strconv.Atoi(contactIDStr)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	err = h.service.UnblockContact(r.Context(), userID.(int64), int64(contactID))
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJsonMsg(w, http.StatusOK, "Contact unblocked")
 }

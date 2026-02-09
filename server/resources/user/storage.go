@@ -126,7 +126,7 @@ func (s *ContactStore) DeleteContact(ctx context.Context, id int64) error {
 
 func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
 	query := `
-		SELECT c.nickname, u.public_key, c.created_at
+		SELECT c.id, c.nickname, u.public_key, c.created_at
 		FROM contacts c
 		JOIN users u ON c.to_user_id = u.id
 		WHERE c.from_user_id = $1 AND c.status = 'accepted'		
@@ -143,7 +143,7 @@ func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([
 
 	for rows.Next() {
 		contact := new(pkg.ContactDetails)
-		if err := rows.Scan(&contact.Username, &contact.PublicKey, &contact.CreatedAt); err != nil {
+		if err := rows.Scan(&contact.ID, &contact.Username, &contact.PublicKey, &contact.CreatedAt); err != nil {
 			return nil, err
 		}
 		contacts = append(contacts, contact)
@@ -158,7 +158,7 @@ func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([
 
 func (s *ContactStore) GetContactRequestsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
 	query := `
-		SELECT u.username, u.public_key, c.created_at
+		SELECT c.id, u.username, u.public_key, c.created_at
 		FROM contacts c
 		JOIN users u ON c.from_user_id = u.id
 		WHERE c.to_user_id = $1 AND c.status = 'pending'		
@@ -175,7 +175,7 @@ func (s *ContactStore) GetContactRequestsByUserID(ctx context.Context, userID in
 
 	for rows.Next() {
 		contact := new(pkg.ContactDetails)
-		if err := rows.Scan(&contact.Username, &contact.PublicKey, &contact.CreatedAt); err != nil {
+		if err := rows.Scan(&contact.ID, &contact.Username, &contact.PublicKey, &contact.CreatedAt); err != nil {
 			return nil, err
 		}
 		contacts = append(contacts, contact)

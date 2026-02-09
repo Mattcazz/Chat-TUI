@@ -39,6 +39,7 @@ type PatchContactRequest struct {
 }
 
 type ContactDetails struct {
+	ID        int64     `json:"id"`
 	Username  string    `json:"username"`
 	PublicKey string    `json:"public_key"`
 	CreatedAt time.Time `json:"created_at"`
