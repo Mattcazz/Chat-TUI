@@ -28,7 +28,7 @@ func CreateJWT(UserId int64) (string, error) {
 
 	secret := os.Getenv("JWT_SECRET")
 
-	return token.SignedString(secret)
+	return token.SignedString([]byte(secret))
 }
 
 func JWTAuth(next func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
