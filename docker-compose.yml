@@ -1,0 +1,45 @@
+services:
+  db:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: Clit
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  migrate:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    command: make migrate-up
+    depends_on:
+      db:
+        condition: service_healthy 
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      PG_USER: postgres
+      PASSWORD: password
+      DB_NAME: Clit
+
+  app: 
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    depends_on:
+      migrate:
+        condition: service_completed_successfully 
+    environment:
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: Clit
+      PG_USER: postgres
+      PASSWORD: password
+    ports: 
+      - "8080:8080"

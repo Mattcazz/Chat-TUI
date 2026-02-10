@@ -8,7 +8,7 @@ import (
 
 func main() {
 
-	addr := "localhost:8080" // momentary
+	addr := ":8080" // momentary
 
 	db := db.ConnectDB()
 	api := NewApiServer(addr, db)
