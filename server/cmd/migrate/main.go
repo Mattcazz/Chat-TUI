@@ -15,8 +15,8 @@ import (
 func main() {
 	err := godotenv.Load()
 
-	if err != nil {
-		log.Fatalf("Error loading .env file: %v", err)
+	if err := godotenv.Load(); err != nil {
+		log.Println("No .env file found, using environment variables")
 	}
 
 	dbHost := os.Getenv("DB_HOST")
