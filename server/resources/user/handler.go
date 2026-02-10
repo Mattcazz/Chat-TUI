@@ -25,7 +25,6 @@ func NewHandler(s *Service) *Handler {
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
 
 	r.Get("/inbox", middleware.JWTAuth(h.getInbox))
-	r.Post("/auth", h.userChallenge)
 	r.Post("/login", h.login)
 	r.Post("/register", h.registerUser)
 	r.Delete("/delete", middleware.JWTAuth(h.deleteUser))
@@ -63,37 +62,34 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	utils.WriteJSON(w, http.StatusOK, user)
 }
 
-func (h *Handler) userChallenge(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-
-	var req pkg.ChallengeRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		utils.WriteJSONError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	nonce, err := h.service.GenerateChallenge(ctx, req.PublicKey)
-
-	if err != nil {
-		if IsUserDoesNotExistError(err) {
-			utils.WriteJsonMsg(w, http.StatusTemporaryRedirect, err.Error())
-			return
-		}
-		utils.WriteJSONError(w, http.StatusBadRequest, err)
-		return
-	}
-
-	resp := pkg.ChallengeResponse{Nonce: nonce}
-
-	utils.WriteJSON(w, http.StatusOK, resp)
-}
-
 func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 	var req pkg.LoginRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	if req.PublicKey == "" {
+		utils.WriteJsonMsg(w, http.StatusBadRequest, "Public key is required")
+		return
+	}
+
+	if req.Signature == "" {
+		nonce, err := h.service.GenerateChallenge(r.Context(), req.PublicKey)
+
+		if err != nil {
+			if IsUserDoesNotExistError(err) {
+				utils.WriteJsonMsg(w, http.StatusTemporaryRedirect, err.Error())
+				return
+			}
+			utils.WriteJSONError(w, http.StatusBadRequest, err)
+			return
+		}
+
+		resp := pkg.ChallengeResponse{Nonce: nonce}
+
+		utils.WriteJSON(w, http.StatusOK, resp)
 		return
 	}
 
@@ -110,7 +106,17 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getInbox(w http.ResponseWriter, r *http.Request) {
-	// TODO: Implement this handler to return the user's inbox
+
+	userID := r.Context().Value(utils.CtxKeyUserID)
+
+	inbox, err := h.service.GetInbox(r.Context(), userID.(int64))
+
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
+	}
+
+	utils.WriteJSON(w, http.StatusOK, inbox)
 }
 
 func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {

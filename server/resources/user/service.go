@@ -99,6 +99,13 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 	return middleware.CreateJWT(user.ID)
 }
 
+func (s *Service) GetInbox(ctx context.Context, userID int64) (*pkg.InboxResponse, error) {
+
+	// TODO implement GetInbox logic
+
+	return &pkg.InboxResponse{}, nil
+}
+
 func (s *Service) GetContacts(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
 	contacts, err := s.contactRepo.GetContactsByUserID(ctx, userID)
 
@@ -111,6 +118,16 @@ func (s *Service) GetContacts(ctx context.Context, userID int64) ([]*pkg.Contact
 }
 
 func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, nickname string) error {
+
+	fromUser, err := s.userRepo.GetUserByID(ctx, fromUserID)
+
+	if err != nil {
+		return fmt.Errorf("From User with ID %d does not exist", fromUserID)
+	}
+
+	if fromUser.PublicKey == toPk {
+		return fmt.Errorf("Ya can't be friends with yourself, buddy")
+	}
 
 	toUser, err := s.userRepo.GetUserByPublicKey(ctx, toPk)
 
