@@ -41,5 +41,6 @@ services:
       DB_NAME: Clit
       PG_USER: postgres
       PASSWORD: password
+      JWT_SECRET: ClitIsBetterThanChatTUI
     ports: 
       - "8080:8080"
