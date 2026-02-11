@@ -44,3 +44,7 @@ type ContactDetails struct {
 	PublicKey string    `json:"public_key"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type InboxResponse struct {
+	// TODO define inbox response structure
+}
