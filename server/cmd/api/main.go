@@ -11,7 +11,7 @@ func main() {
 	addr := ":8080" // momentary
 
 	db := db.ConnectDB()
-	api := NewApiServer(addr, db)
+	api := NewAPIServer(addr, db)
 
 	if err := api.Run(); err != nil {
 		log.Fatal("Error running server")
