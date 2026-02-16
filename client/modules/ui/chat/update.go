@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"clit_client/internal/commands"
+	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"

@@ -1,7 +1,7 @@
 package input_box
 
 import (
-	"clit_client/internal/commands"
+	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
 	"time"
 
 	tea "github.com/charmbracelet/bubbletea"

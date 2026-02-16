@@ -1,4 +1,4 @@
-module clit_client
+module github.com/Mattcazz/Chat-TUI/client
 
 go 1.25.6
 
@@ -29,3 +29,6 @@ require (
 	golang.org/x/sys v0.30.0 // indirect
 	golang.org/x/text v0.3.8 // indirect
 )
+
+require github.com/Mattcazz/Chat-TUI/pkg v0.0.0
+replace github.com/Mattcazz/Chat-TUI/pkg => ../pkg

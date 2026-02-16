@@ -1,7 +1,7 @@
 package chat
 
 import (
-	"clit_client/styles"
+	"github.com/Mattcazz/Chat-TUI/client/styles"
 
 	"github.com/charmbracelet/lipgloss"
 )

@@ -1,8 +1,8 @@
 package chat
 
 import (
-	"clit_client/modules/ui/chat_view"
-	"clit_client/modules/ui/input_box"
+	"github.com/Mattcazz/Chat-TUI/client/modules/ui/chat_view"
+	"github.com/Mattcazz/Chat-TUI/client/modules/ui/input_box"
 
 	tea "github.com/charmbracelet/bubbletea"
 )
