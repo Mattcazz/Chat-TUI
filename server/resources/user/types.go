@@ -37,7 +37,7 @@ type Contact struct {
 	Nickname   string        `json:"nickname"`
 	Status     contactStatus `json:"status"`
 	UpdatedAt  time.Time     `json:"updated_at"`
-	Created_at time.Time     `json:"created_at"`
+	CreatedAt  time.Time     `json:"created_at"`
 }
 
 type ChallengeRepository interface {
@@ -73,6 +73,8 @@ func IsUserDoesNotExistError(err error) bool {
 
 type contactStatus string
 
-const StatusAccept contactStatus = "accepted"
-const StatusPending contactStatus = "pending"
-const StatusBlocked contactStatus = "blocked"
+const (
+	StatusAccept  contactStatus = "accepted"
+	StatusPending contactStatus = "pending"
+	StatusBlocked contactStatus = "blocked"
+)

@@ -24,7 +24,6 @@ func (s *UserStore) CreateUser(ctx context.Context, u *User) (*User, error) {
 	row := s.db.QueryRowContext(ctx, query, u.Username, u.PublicKey)
 
 	err := row.Scan(&u.ID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -58,7 +57,6 @@ func (s *UserStore) UpdateUser(ctx context.Context, c *User) error {
 }
 
 func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
-
 	query := `DELETE FROM users WHERE id = $1`
 
 	_, err := s.db.ExecContext(ctx, query, id)
@@ -98,10 +96,9 @@ func (s *ContactStore) GetContactByPair(ctx context.Context, userID1, userID2 in
 }
 
 func (s *ContactStore) CreateContact(ctx context.Context, c *Contact) error {
-
 	query := `INSERT INTO contacts (from_user_id, to_user_id, nickname, status, created_at) VALUES ($1, $2, $3, $4::contact_status, $5)`
 
-	_, err := s.db.ExecContext(ctx, query, c.FromUserID, c.ToUserID, c.Nickname, c.Status, c.Created_at)
+	_, err := s.db.ExecContext(ctx, query, c.FromUserID, c.ToUserID, c.Nickname, c.Status, c.CreatedAt)
 
 	return err
 }
@@ -132,7 +129,6 @@ func (s *ContactStore) GetContactsByUserID(ctx context.Context, userID int64) ([
 		WHERE c.from_user_id = $1 AND c.status = 'accepted'		
 	`
 	rows, err := s.db.QueryContext(ctx, query, userID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -164,7 +160,6 @@ func (s *ContactStore) GetContactRequestsByUserID(ctx context.Context, userID in
 		WHERE c.to_user_id = $1 AND c.status = 'pending'		
 	`
 	rows, err := s.db.QueryContext(ctx, query, userID)
-
 	if err != nil {
 		return nil, err
 	}
@@ -196,7 +191,7 @@ func scanContact(row *sql.Row) (*Contact, error) {
 		&contact.FromUserID,
 		&contact.ToUserID,
 		&contact.Nickname,
-		&contact.Created_at)
+		&contact.CreatedAt)
 
 	return contact, err
 }
@@ -212,7 +207,6 @@ func NewChallengeStore(db *sql.DB) *ChallengeStore {
 }
 
 func (s *ChallengeStore) CreateChallenge(ctx context.Context, challenge *Challenge) error {
-
 	query := `INSERT INTO auth_challenges (user_id, nonce, expires_at) VALUES ($1, $2, $3)`
 
 	_, err := s.db.ExecContext(ctx, query, challenge.UserID, challenge.Nonce, challenge.ExpiresAt)
