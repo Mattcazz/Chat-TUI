@@ -23,7 +23,6 @@ func NewHandler(s *Service) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
-
 	r.Get("/inbox", middleware.JWTAuth(h.getInbox))
 	r.Post("/login", h.login)
 	r.Post("/register", h.registerUser)
@@ -53,7 +52,6 @@ func (h *Handler) registerUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user, err := h.service.CreateUser(ctx, req.PublicKey, req.Username)
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -77,7 +75,6 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 	if req.Signature == "" {
 		nonce, err := h.service.GenerateChallenge(r.Context(), req.PublicKey)
-
 		if err != nil {
 			if IsUserDoesNotExistError(err) {
 				utils.WriteJsonMsg(w, http.StatusTemporaryRedirect, err.Error())
@@ -89,12 +86,11 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 
 		resp := pkg.ChallengeResponse{Nonce: nonce}
 
-		utils.WriteJSON(w, http.StatusOK, resp)
+		utils.WriteJSON(w, http.StatusAccepted, resp)
 		return
 	}
 
 	token, err := h.service.VerifyAndLogin(r.Context(), req.PublicKey, req.Signature)
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -106,11 +102,9 @@ func (h *Handler) login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) getInbox(w http.ResponseWriter, r *http.Request) {
-
 	userID := r.Context().Value(utils.CtxKeyUserID)
 
 	inbox, err := h.service.GetInbox(r.Context(), userID.(int64))
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -123,7 +117,6 @@ func (h *Handler) deleteUser(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(utils.CtxKeyUserID)
 
 	err := h.service.DeleteUser(r.Context(), userID.(int64))
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -136,7 +129,6 @@ func (h *Handler) getContacts(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(utils.CtxKeyUserID)
 
 	contacts, err := h.service.GetContacts(r.Context(), userID.(int64))
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -146,7 +138,6 @@ func (h *Handler) getContacts(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) postContactRequest(w http.ResponseWriter, r *http.Request) {
-
 	userID := r.Context().Value(utils.CtxKeyUserID)
 
 	var req pkg.PostContactRequest
@@ -157,7 +148,6 @@ func (h *Handler) postContactRequest(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err := h.service.ContactRequest(r.Context(), userID.(int64), req.PublicKey, req.Nickname)
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -170,7 +160,6 @@ func (h *Handler) getContactRequests(w http.ResponseWriter, r *http.Request) {
 	userID := r.Context().Value(utils.CtxKeyUserID)
 
 	contacts, err := h.service.GetContactRequests(r.Context(), userID.(int64))
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -191,7 +180,6 @@ func (h *Handler) blockContact(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.service.BlockContact(r.Context(), userID.(int64), int64(contactID))
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
@@ -212,7 +200,6 @@ func (h *Handler) unblockContact(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.service.UnblockContact(r.Context(), userID.(int64), int64(contactID))
-
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return
