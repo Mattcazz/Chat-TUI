@@ -51,12 +51,12 @@ func (a *APIServer) Run() error {
 	userHandler.RegisterRoutes(r)
 
 	fileStore := file.NewFileStore(a.db)
-	fileService := file.NewService(fileStore)
+	fileService := file.NewService(fileStore, txManager)
 	fileHandler := file.NewHandler(fileService)
 	fileHandler.RegisterRoutes(r)
 
 	msgStore := msg.NewMsgStore(a.db)
-	msgService := msg.NewService(msgStore)
+	msgService := msg.NewService(msgStore, txManager)
 	msgHandler := msg.NewHandler(msgService)
 	msgHandler.RegisterRoutes(r)
 
