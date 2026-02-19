@@ -9,6 +9,7 @@ import (
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
 
+	"github.com/Mattcazz/Chat-TUI/server/db"
 	"github.com/Mattcazz/Chat-TUI/server/resources/file"
 	"github.com/Mattcazz/Chat-TUI/server/resources/msg"
 	"github.com/Mattcazz/Chat-TUI/server/resources/user"
@@ -40,10 +41,12 @@ func (a *APIServer) Run() error {
 	// processing should be stopped.
 	r.Use(middleware.Timeout(60 * time.Second))
 
+	txManager := db.NewTxManager(a.db)
+
 	userStore := user.NewUserStore(a.db)
 	contactStore := user.NewContactStore(a.db)
 	challengeStore := user.NewChallengeStore(a.db)
-	userService := user.NewService(userStore, contactStore, challengeStore)
+	userService := user.NewService(userStore, contactStore, challengeStore, txManager)
 	userHandler := user.NewHandler(userService)
 	userHandler.RegisterRoutes(r)
 

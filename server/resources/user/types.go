@@ -2,12 +2,14 @@ package user
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
 )
 
 type UserRepository interface {
+	WithTx(tx *sql.Tx) *UserStore
 	CreateUser(ctx context.Context, u *User) (*User, error)
 	GetUserByID(ctx context.Context, id int64) (*User, error)
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error)
@@ -23,6 +25,7 @@ type User struct {
 
 type ContactRepository interface {
 	GetContactsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error)
+	WithTx(tx *sql.Tx) *ContactStore
 	GetContactByPair(ctx context.Context, userID1, userID2 int64) (*Contact, error)
 	GetContactRequestsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error)
 	CreateContact(ctx context.Context, c *Contact) error
@@ -41,6 +44,7 @@ type Contact struct {
 }
 
 type ChallengeRepository interface {
+	WithTx(tx *sql.Tx) *ChallengeStore
 	CreateChallenge(ctx context.Context, challenge *Challenge) error
 	GetChallenge(ctx context.Context, id int64) (*Challenge, error)
 	DeleteChallenge(ctx context.Context, id int64, nonce string) error

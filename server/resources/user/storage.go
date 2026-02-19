@@ -6,13 +6,20 @@ import (
 	"log"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
+	"github.com/Mattcazz/Chat-TUI/server/db"
 )
 
 type UserStore struct {
-	db *sql.DB
+	db db.DBTX
 }
 
 func NewUserStore(db *sql.DB) *UserStore {
+	return &UserStore{
+		db: db,
+	}
+}
+
+func (s *UserStore) WithTx(db *sql.Tx) *UserStore {
 	return &UserStore{
 		db: db,
 	}
@@ -76,10 +83,16 @@ func scanUser(row *sql.Row) (*User, error) {
 }
 
 type ContactStore struct {
-	db *sql.DB
+	db db.DBTX
 }
 
 func NewContactStore(db *sql.DB) *ContactStore {
+	return &ContactStore{
+		db: db,
+	}
+}
+
+func (s *ContactStore) WithTx(db *sql.Tx) *ContactStore {
 	return &ContactStore{
 		db: db,
 	}
@@ -197,10 +210,16 @@ func scanContact(row *sql.Row) (*Contact, error) {
 }
 
 type ChallengeStore struct {
-	db *sql.DB
+	db db.DBTX
 }
 
 func NewChallengeStore(db *sql.DB) *ChallengeStore {
+	return &ChallengeStore{
+		db: db,
+	}
+}
+
+func (s *ChallengeStore) WithTx(db *sql.Tx) *ChallengeStore {
 	return &ChallengeStore{
 		db: db,
 	}

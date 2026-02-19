@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
+	"github.com/Mattcazz/Chat-TUI/server/db"
 	"github.com/Mattcazz/Chat-TUI/server/resources/middleware"
 	"github.com/Mattcazz/Chat-TUI/server/utils"
 )
@@ -15,13 +16,15 @@ type Service struct {
 	userRepo      UserRepository
 	contactRepo   ContactRepository
 	challengeRepo ChallengeRepository
+	tx            *db.TxManager
 }
 
-func NewService(userRepo UserRepository, contactRepo ContactRepository, challengeRepo ChallengeRepository) *Service {
+func NewService(userRepo UserRepository, contactRepo ContactRepository, challengeRepo ChallengeRepository, tx *db.TxManager) *Service {
 	return &Service{
 		userRepo:      userRepo,
 		contactRepo:   contactRepo,
 		challengeRepo: challengeRepo,
+		tx:            tx,
 	}
 }
 
@@ -129,6 +132,13 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 
 	status := StatusPending
 
+	tx, err := s.tx.StartTx(ctx)
+	defer tx.Rollback()
+
+	if err != nil {
+		return err
+	}
+
 	contact, err := s.contactRepo.GetContactByPair(ctx, toUser.ID, fromUserID)
 
 	if err == nil && contact != nil {
@@ -137,7 +147,7 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 		status = StatusAccept
 		contact.UpdatedAt = time.Now()
 
-		err = s.contactRepo.UpdateContact(ctx, contact)
+		err = s.contactRepo.WithTx(tx).UpdateContact(ctx, contact)
 		if err != nil {
 			return err
 		}
@@ -156,7 +166,12 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 		CreatedAt:  time.Now(),
 	}
 
-	return s.contactRepo.CreateContact(ctx, c)
+	err = s.contactRepo.WithTx(tx).CreateContact(ctx, c)
+	if err == nil {
+		tx.Commit()
+	}
+
+	return err
 }
 
 func (s *Service) GetContactRequests(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
