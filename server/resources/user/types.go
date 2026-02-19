@@ -2,12 +2,14 @@ package user
 
 import (
 	"context"
+	"database/sql"
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
 )
 
 type UserRepository interface {
+	WithTx(tx *sql.Tx) *UserStore
 	CreateUser(ctx context.Context, u *User) (*User, error)
 	GetUserByID(ctx context.Context, id int64) (*User, error)
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error)
@@ -23,6 +25,7 @@ type User struct {
 
 type ContactRepository interface {
 	GetContactsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error)
+	WithTx(tx *sql.Tx) *ContactStore
 	GetContactByPair(ctx context.Context, userID1, userID2 int64) (*Contact, error)
 	GetContactRequestsByUserID(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error)
 	CreateContact(ctx context.Context, c *Contact) error
@@ -37,10 +40,11 @@ type Contact struct {
 	Nickname   string        `json:"nickname"`
 	Status     contactStatus `json:"status"`
 	UpdatedAt  time.Time     `json:"updated_at"`
-	Created_at time.Time     `json:"created_at"`
+	CreatedAt  time.Time     `json:"created_at"`
 }
 
 type ChallengeRepository interface {
+	WithTx(tx *sql.Tx) *ChallengeStore
 	CreateChallenge(ctx context.Context, challenge *Challenge) error
 	GetChallenge(ctx context.Context, id int64) (*Challenge, error)
 	DeleteChallenge(ctx context.Context, id int64, nonce string) error
@@ -73,6 +77,8 @@ func IsUserDoesNotExistError(err error) bool {
 
 type contactStatus string
 
-const StatusAccept contactStatus = "accepted"
-const StatusPending contactStatus = "pending"
-const StatusBlocked contactStatus = "blocked"
+const (
+	StatusAccept  contactStatus = "accepted"
+	StatusPending contactStatus = "pending"
+	StatusBlocked contactStatus = "blocked"
+)

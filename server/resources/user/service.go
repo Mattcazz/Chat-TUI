@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
+	"github.com/Mattcazz/Chat-TUI/server/db"
 	"github.com/Mattcazz/Chat-TUI/server/resources/middleware"
 	"github.com/Mattcazz/Chat-TUI/server/utils"
 )
@@ -15,13 +16,15 @@ type Service struct {
 	userRepo      UserRepository
 	contactRepo   ContactRepository
 	challengeRepo ChallengeRepository
+	tx            *db.TxManager
 }
 
-func NewService(userRepo UserRepository, contactRepo ContactRepository, challengeRepo ChallengeRepository) *Service {
+func NewService(userRepo UserRepository, contactRepo ContactRepository, challengeRepo ChallengeRepository, tx *db.TxManager) *Service {
 	return &Service{
 		userRepo:      userRepo,
 		contactRepo:   contactRepo,
 		challengeRepo: challengeRepo,
+		tx:            tx,
 	}
 }
 
@@ -46,7 +49,6 @@ func (s *Service) DeleteUser(ctx context.Context, userID int64) error {
 
 func (s *Service) GenerateChallenge(ctx context.Context, publicKey string) (string, error) {
 	user, err := s.userRepo.GetUserByPublicKey(ctx, publicKey)
-
 	if err != nil {
 		err = NewUserDoesNotExistError()
 		return "", err
@@ -62,7 +64,6 @@ func (s *Service) GenerateChallenge(ctx context.Context, publicKey string) (stri
 	}
 
 	err = s.challengeRepo.CreateChallenge(ctx, challenge)
-
 	if err != nil {
 		return "", err
 	}
@@ -71,9 +72,7 @@ func (s *Service) GenerateChallenge(ctx context.Context, publicKey string) (stri
 }
 
 func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature string) (string, error) {
-
 	user, err := s.userRepo.GetUserByPublicKey(ctx, publicKey)
-
 	if err != nil {
 		err = NewUserDoesNotExistError()
 		return "", err
@@ -100,7 +99,6 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 }
 
 func (s *Service) GetInbox(ctx context.Context, userID int64) (*pkg.InboxResponse, error) {
-
 	// TODO implement GetInbox logic
 
 	return &pkg.InboxResponse{}, nil
@@ -118,9 +116,7 @@ func (s *Service) GetContacts(ctx context.Context, userID int64) ([]*pkg.Contact
 }
 
 func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, nickname string) error {
-
 	fromUser, err := s.userRepo.GetUserByID(ctx, fromUserID)
-
 	if err != nil {
 		return fmt.Errorf("From User with ID %d does not exist", fromUserID)
 	}
@@ -130,12 +126,18 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 	}
 
 	toUser, err := s.userRepo.GetUserByPublicKey(ctx, toPk)
-
 	if err != nil {
 		return fmt.Errorf("User with public key %s does not exist", toPk)
 	}
 
 	status := StatusPending
+
+	tx, err := s.tx.StartTx(ctx)
+	defer tx.Rollback()
+
+	if err != nil {
+		return err
+	}
 
 	contact, err := s.contactRepo.GetContactByPair(ctx, toUser.ID, fromUserID)
 
@@ -145,8 +147,7 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 		status = StatusAccept
 		contact.UpdatedAt = time.Now()
 
-		err = s.contactRepo.UpdateContact(ctx, contact)
-
+		err = s.contactRepo.WithTx(tx).UpdateContact(ctx, contact)
 		if err != nil {
 			return err
 		}
@@ -162,11 +163,15 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 		Nickname:   nickname,
 		Status:     status,
 		UpdatedAt:  time.Now(),
-		Created_at: time.Now(),
+		CreatedAt:  time.Now(),
 	}
 
-	return s.contactRepo.CreateContact(ctx, c)
+	err = s.contactRepo.WithTx(tx).CreateContact(ctx, c)
+	if err == nil {
+		tx.Commit()
+	}
 
+	return err
 }
 
 func (s *Service) GetContactRequests(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
@@ -181,7 +186,6 @@ func (s *Service) GetContactRequests(ctx context.Context, userID int64) ([]*pkg.
 }
 
 func (s *Service) BlockContact(ctx context.Context, userID, contactID int64) error {
-
 	c := &Contact{
 		ID:        contactID,
 		Status:    StatusBlocked,
@@ -192,7 +196,6 @@ func (s *Service) BlockContact(ctx context.Context, userID, contactID int64) err
 }
 
 func (s *Service) UnblockContact(ctx context.Context, userID, contactID int64) error {
-
 	c := &Contact{
 		ID:        contactID,
 		Status:    StatusAccept,
