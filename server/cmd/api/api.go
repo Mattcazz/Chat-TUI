@@ -11,7 +11,8 @@ import (
 
 	"github.com/Mattcazz/Chat-TUI/server/db"
 	"github.com/Mattcazz/Chat-TUI/server/resources/file"
-	"github.com/Mattcazz/Chat-TUI/server/resources/msg"
+
+	"github.com/Mattcazz/Chat-TUI/server/resources/chat"
 	"github.com/Mattcazz/Chat-TUI/server/resources/user"
 )
 
@@ -55,10 +56,10 @@ func (a *APIServer) Run() error {
 	fileHandler := file.NewHandler(fileService)
 	fileHandler.RegisterRoutes(r)
 
-	msgStore := msg.NewMsgStore(a.db)
-	msgService := msg.NewService(msgStore, txManager)
-	msgHandler := msg.NewHandler(msgService)
-	msgHandler.RegisterRoutes(r)
+	conversationStore := chat.NewConversationStore(a.db)
+	conversationService := chat.NewService(conversationStore, txManager)
+	conversationHandler := chat.NewHandler(conversationService)
+	conversationHandler.RegisterRoutes(r)
 
 	log.Println("Listening on address ", a.addr)
 
