@@ -48,3 +48,7 @@ type ContactDetails struct {
 type InboxResponse struct {
 	// TODO define inbox response structure
 }
+
+type SendMsgRequest struct {
+	Content string `json:"content"`
+}

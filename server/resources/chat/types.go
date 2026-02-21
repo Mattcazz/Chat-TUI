@@ -19,15 +19,15 @@ type ConversationRepository interface {
 }
 
 type Message struct {
-	SenderID       int64
-	Content        string
-	ConversationID int64
-	CreatedAt      time.Time
+	SenderID       int64     `json:"sender_id"`
+	Content        string    `json:"content"`
+	ConversationID int64     `json:"conversation_id"`
+	CreatedAt      time.Time `json:"created_at"`
 }
 
 type Conversation struct {
-	ID        int64
-	LastMsg   string
-	LastMsgAt time.Time
-	CreatedAt time.Time
+	ID        int64     `json:"id"`
+	LastMsg   string    `json:"last_message"`
+	LastMsgAt time.Time `json:"last_message_at"`
+	CreatedAt time.Time `json:"created_at"`
 }

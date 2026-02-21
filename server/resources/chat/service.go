@@ -1,6 +1,10 @@
 package chat
 
-import "github.com/Mattcazz/Chat-TUI/server/db"
+import (
+	"context"
+
+	"github.com/Mattcazz/Chat-TUI/server/db"
+)
 
 type Service struct {
 	conversationRepo ConversationRepository
@@ -12,4 +16,8 @@ func NewService(conversationRepo ConversationRepository, tx *db.TxManager) *Serv
 		conversationRepo: conversationRepo,
 		tx:               tx,
 	}
+}
+
+func (s *Service) postConversationMsg(ctx context.Context, sender_id, conv_id int64, content string) error {
+	return nil
 }
