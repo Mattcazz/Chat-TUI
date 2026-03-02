@@ -4,18 +4,22 @@ import (
 	"context"
 	"database/sql"
 	"time"
+
+	"github.com/Mattcazz/Chat-TUI/pkg"
 )
 
 type ConversationRepository interface {
 	WithTx(*sql.Tx) *ConversationStore
-	CreateConversation(context.Context, Conversation) error
+	AddParticipantToConversation(ctx context.Context, conversationID, participantID int64, role ParticipantRole) error
+	CreateConversation(context.Context, *Conversation) error
 	DeleteConversation(context.Context, int64) error
-	EditConversation(context.Context, Conversation) error
-	GetConversation(context.Context, int64) (*Conversation, error)
-	GetConversationHistory(ctx context.Context, converastionID, limit int64) (*[]Message, error)
+	EditConversation(context.Context, *Conversation) error
+	GetConversation(context.Context, int64, int64) (*pkg.ConversationResponse, error)
+	GetConversationHistory(ctx context.Context, converastionID, limit int64) (*pkg.ConversationResponse, error)
 	DeleteMessage(context.Context, int64) error
 	GetMessage(context.Context, int64) *Message
-	CreateMessage(context.Context, Message) error
+	CreateMessage(context.Context, *Message) error
+	GetConversationDM(ctx context.Context, firstID, secondID, limit int64) (*pkg.ConversationResponse, error)
 }
 
 type Message struct {
@@ -31,3 +35,10 @@ type Conversation struct {
 	LastMsgAt time.Time `json:"last_message_at"`
 	CreatedAt time.Time `json:"created_at"`
 }
+
+type ParticipantRole string
+
+const (
+	RoleAdmin  ParticipantRole = "admin"
+	RoleMember ParticipantRole = "member"
+)
