@@ -28,7 +28,7 @@ func NewService(userRepo UserRepository, contactRepo ContactRepository, challeng
 	}
 }
 
-func (s *Service) CreateUser(ctx context.Context, publicKey, username string) (*User, error) {
+func (s *Service) CreateUser(ctx context.Context, publicKey, username string) (*pkg.UserResponse, error) {
 	user, err := s.userRepo.GetUserByPublicKey(ctx, publicKey)
 
 	if err == nil && user != nil {
@@ -40,7 +40,15 @@ func (s *Service) CreateUser(ctx context.Context, publicKey, username string) (*
 		Username:  username,
 	}
 
-	return s.userRepo.CreateUser(ctx, u)
+	user, err = s.userRepo.CreateUser(ctx, u)
+	if err != nil {
+		return nil, err
+	}
+
+	return &pkg.UserResponse{
+		Username: user.Username,
+		ID:       user.ID,
+	}, nil
 }
 
 func (s *Service) DeleteUser(ctx context.Context, userID int64) error {

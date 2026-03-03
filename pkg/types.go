@@ -18,8 +18,7 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Username string `json:"username"`
-	Token    string `json:"token"`
+	Token string `json:"token"`
 }
 
 type RegisterRequest struct {
@@ -48,8 +47,21 @@ type ContactDetails struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type InboxConversationResponse struct {
+	UserName  string    `json:"username"`
+	ID        int64     `json:"id"`
+	LastMsg   string    `json:"last_message"`
+	LastMsgAt time.Time `json:"last_message_at"`
+}
+
+type UserResponse struct {
+	Username string `json:"username"`
+	ID       int64  `json:"id"`
+}
+
 type InboxResponse struct {
-	// TODO: define inbox response structure
+	User          *UserResponse               `json:"user"`
+	Conversations []InboxConversationResponse `json:"conversations"`
 }
 
 type SendMsgRequest struct {
