@@ -1,27 +1,19 @@
 package app
 
 import (
-	"bytes"
-	"encoding/json"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
+	"github.com/Mattcazz/Chat-TUI/client/internal/config"
+	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
 	"github.com/Mattcazz/Chat-TUI/client/modules/ui/chat"
 	"github.com/Mattcazz/Chat-TUI/client/modules/ui/login"
 	"github.com/Mattcazz/Chat-TUI/client/styles"
 	"github.com/Mattcazz/Chat-TUI/client/types"
-	"github.com/Mattcazz/Chat-TUI/pkg"
 
 	tea "github.com/charmbracelet/bubbletea"
 	"github.com/charmbracelet/lipgloss"
-
-	"crypto/rand"
-	"encoding/base64"
-	"fmt"
-
-	"golang.org/x/crypto/ssh"
 )
 
 type App struct {
@@ -29,7 +21,7 @@ type App struct {
 	login_model tea.Model
 	chat_model tea.Model
 
-	client *http.Client
+	client *types.BaseClient
 
 	username string
 	err error
@@ -37,57 +29,29 @@ type App struct {
 	height int
 }
 
-func getSSHPrivateKey() []byte {
-	keyPath := os.Getenv("HOME") + "/.ssh/id_ed25519"
-	keyBytes, err := os.ReadFile(keyPath)
-	if err != nil {
-		panic("Could not read private key: " + err.Error())
-	}
-
-	return keyBytes
-}
-
-func createSignature(nonce string, sk []byte) string {
-	// 2. Parse Private Key
-	signer, err := ssh.ParsePrivateKey(keyBytes)
-	if err != nil {
-		panic(err)
-	}
-
-	// 3. Sign the Nonce
-	sig, err := signer.Sign(rand.Reader, []byte(nonce))
-	if err != nil {
-		panic(err)
-	}
-
-	// 4. Encode to Base64 (This is what you paste into Curl)
-	sigBytes := ssh.Marshal(sig) // Important: Marshal to wire format first!
-	b64Sig := base64.StdEncoding.EncodeToString(sigBytes)
-
-	// 5. Get Public Key String (for the request)
-	pubKey := ssh.MarshalAuthorizedKey(signer.PublicKey())
-
-	fmt.Println("\n--- COPY THESE FOR CURL ---")
-	fmt.Printf("Public Key: %s", pubKey) // Contains newline
-	fmt.Printf("Signature:  %s\n", b64Sig)
-}
-
 func New() App {
-	app_client := &http.Client{
+	app_client := http.Client{
 		Timeout: time.Second * 10,
 	}
+	config.LoadConfig()
 
+	logger.Init()
+
+	client := &types.BaseClient{Client: app_client, Config: config.Configuration} // TODO only pass host and port
 	return App{
 		state: types.LoginView,
-		login_model: login.New(),
+		login_model: login.NewLoginModel(client),
 		chat_model: chat.New(),
-		client: app_client,
+		client: client,
 		err: nil,
 	}
 }
 
 func (a App) Init() tea.Cmd {
-	return nil
+	return tea.Batch(
+		a.login_model.Init(),
+		a.chat_model.Init(),
+	)
 }
 
 func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -95,49 +59,17 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 
 	switch msg := msg.(type) {
 	case commands.ChangeStateMsg:
+		logger.Log.Printf("[APP] Changing state to: %s", msg.State)
 		m.state = msg.State
 		return m, nil
 	case commands.LogInMsg:
+		logger.Log.Printf("[APP] Successfully logged in with username: %s", msg.Username)
 		m.username = msg.Username
-		// Check that log in was successful eventually, but
-		// TODO get pub key
-		login_req := pkg.LoginRequest{
-			PublicKey: "fuck",
-		}
-		body, err := json.Marshal(login_req)
-		if err != nil {
-			// TODO
-		}
-		req, err := http.NewRequest("POST", "localhost", bytes.NewBuffer(body))
-
-		req.Header.Add("Authorization", "JWT") // TODO
-		req.Header.Add("Content-Type", "application/json")
-
-		resp, err := m.client.Do(req)
-		if err != nil {
-			// TODO
-		}
-		defer resp.Body.Close()
-
-		switch resp.StatusCode {
-		case http.StatusOK:
-			// Logged in successfully
-		case http.StatusAccepted:
-			// Nonce coming
-			var challenge_resp pkg.ChallengeResponse
-			json.NewDecoder(resp.Body).Decode(&challenge_resp)
-			// TODO handle that shit
-		case http.StatusTemporaryRedirect:
-			// Oops, we need to register
-			// TODO /register with username
-		}
-
-
-		var login_resp pkg.LoginResponse
-		json.NewDecoder(resp.Body).Decode(&login_resp)
-
 		m.chat_model, _ = m.chat_model.Update(msg)
-		return m, commands.NewChangeStateCmd(types.ChatView)
+		logger.Log.Printf("[APP] Switching to chat view...")
+		m.state = types.ChatView
+
+		return m, nil
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
