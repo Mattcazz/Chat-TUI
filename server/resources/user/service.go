@@ -151,6 +151,8 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 		if err != nil {
 			return err
 		}
+	} else {
+		log.Printf("contact not found %v", err)
 	}
 
 	if nickname == "" {

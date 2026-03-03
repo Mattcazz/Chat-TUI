@@ -2,6 +2,7 @@ package chat
 
 import (
 	"context"
+	"log"
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
@@ -32,10 +33,12 @@ func (s *Service) PostConversationMsg(ctx context.Context, senderID, convID int6
 
 // user wants to start conversation with a contact
 func (s *Service) GetOrCreateDM(ctx context.Context, creatorID, participantID int64) (*pkg.ConversationResponse, error) {
-	var conversation *pkg.ConversationResponse
-
-	conversation, err := s.conversationRepo.GetConversationDM(ctx, creatorID, participantID, 20) // TODO: How many messages do we want to show?
+	conversation, err := s.conversationRepo.GetConversationDM(ctx, creatorID, participantID, 20)
 	if err != nil {
+		return nil, err
+	}
+
+	if conversation == nil || conversation.ID == 0 {
 		var participants []int64
 		participants = append(participants, participantID)
 		return s.createChat(ctx, creatorID, participants)
@@ -64,6 +67,7 @@ func (s *Service) createChat(ctx context.Context, creatorID int64, otherParticip
 		return nil, err
 	} // we will get the id of the conversation after this point.
 
+	log.Println("Created conversation ", conversation.ID)
 	// then we add the creator as admin. TODO: decide if this logic makes sense (admin role for creator)
 	if err := s.conversationRepo.WithTx(tx).AddParticipantToConversation(ctx, conversation.ID, creatorID, RoleAdmin); err != nil {
 		return nil, err
@@ -78,5 +82,5 @@ func (s *Service) createChat(ctx context.Context, creatorID int64, otherParticip
 	}
 	tx.Commit()
 
-	return s.conversationRepo.GetConversationHistory(ctx, conversation.ID, 20) // TODO: decide how many messages
+	return s.conversationRepo.GetConversation(ctx, conversation.ID, 20) // TODO: decide how many messages
 }

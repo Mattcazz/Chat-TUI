@@ -3,6 +3,7 @@ package chat
 import (
 	"context"
 	"database/sql"
+	"fmt"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
 	"github.com/Mattcazz/Chat-TUI/server/db"
@@ -25,14 +26,14 @@ func (s *ConversationStore) WithTx(tx *sql.Tx) *ConversationStore {
 }
 
 func (s *ConversationStore) AddParticipantToConversation(ctx context.Context, conversationID, participantID int64, role ParticipantRole) error {
-	query := `INSERT INTO conversation_participants (convconversation_id, user_id, role) VALUES (1$, 2$, 3$)`
+	query := `INSERT INTO conversation_participants (conversation_id, user_id, role) VALUES ($1, $2, $3)`
 
 	_, err := s.db.ExecContext(ctx, query, conversationID, participantID, role)
 	return err
 }
 
 func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) error {
-	query := `INSERT INTO messages (conversation_id, sender_id, content, created_at) VALUES (1$, 2$, 3$, 4$)`
+	query := `INSERT INTO messages (conversation_id, sender_id, content, created_at) VALUES ($1, $2, $3, $4)`
 
 	_, err := s.db.ExecContext(ctx, query, msg.ConversationID, msg.SenderID, msg.Content, msg.CreatedAt)
 	if err != nil {
@@ -43,7 +44,7 @@ func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) err
 }
 
 func (s *ConversationStore) DeleteMessage(ctx context.Context, msgID int64) error {
-	query := `DELETE FROM messages WHERE id = 1$`
+	query := `DELETE FROM messages WHERE id = $1`
 
 	_, err := s.db.ExecContext(ctx, query, msgID)
 	return err
@@ -54,14 +55,14 @@ func (s *ConversationStore) GetMessage(context.Context, int64) *Message {
 }
 
 func (s *ConversationStore) CreateConversation(ctx context.Context, conversation *Conversation) error {
-	query := `INSERT INTO conversations (created_at) VALUES (1$) RETURNING id`
+	query := `INSERT INTO conversations (created_at) VALUES ($1) RETURNING id`
 
-	row, err := s.db.QueryContext(ctx, query, conversation.CreatedAt)
+	err := s.db.QueryRowContext(ctx, query, conversation.CreatedAt).Scan(&conversation.ID)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to insert conversation: %w", err)
 	}
 
-	return row.Scan(conversation.ID)
+	return nil
 }
 
 func (s *ConversationStore) DeleteConversation(context.Context, int64) error {
@@ -75,8 +76,8 @@ func (s *ConversationStore) EditConversation(context.Context, *Conversation) err
 func (s *ConversationStore) GetConversation(ctx context.Context, id, limit int64) (*pkg.ConversationResponse, error) {
 	query := `SELECT m.content, u.username, m.created_at
 						FROM messages m 
-						LEFT JOIN user u
-						ON m.user_id = u.id
+						LEFT JOIN users u
+						ON m.sender_id = u.id
 						WHERE m.conversation_id = $1
 						ORDER BY m.created_at DESC
 						LIMIT $2`
@@ -96,6 +97,7 @@ func (s *ConversationStore) GetConversation(ctx context.Context, id, limit int64
 		if err := rows.Scan(&msg.Content, &msg.UserName, &msg.CreatedAt); err != nil {
 			return nil, err
 		}
+		conversation.Messages = append(conversation.Messages, msg)
 	}
 
 	return conversation, nil
@@ -117,7 +119,7 @@ func (s *ConversationStore) GetConversationDM(ctx context.Context, firstID, seco
 						WHERE user_id = $2)
 						SELECT m.conversation_id, m.content, u.username, m.created_at
 						FROM messages m
-						LEFT JOIN users u ON m.user_id = u.id
+						LEFT JOIN users u ON m.sender_id = u.id
 						WHERE m.conversation_id IN (SELECT conversation_id FROM conversation)
 						ORDER BY m.created_at DESC
 						LIMIT $3`

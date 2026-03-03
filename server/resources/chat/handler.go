@@ -53,13 +53,15 @@ func (h *Handler) postConversationDM(w http.ResponseWriter, r *http.Request) {
 
 	var createConvReq pkg.CreateConversationDmRequest
 
-	if err := json.NewEncoder(w).Encode(createConvReq); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&createConvReq); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	conversation, err := h.convService.GetOrCreateDM(r.Context(), senderID.(int64), createConvReq.ParticipantID)
 	if err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	utils.WriteJSON(w, http.StatusAccepted, conversation)
@@ -73,7 +75,7 @@ func (h *Handler) postMessageInConversation(w http.ResponseWriter, r *http.Reque
 
 	var msgReq pkg.SendMsgRequest
 
-	if err := json.NewEncoder(w).Encode(msgReq); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&msgReq); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 	}
 
@@ -87,6 +89,7 @@ func (h *Handler) postMessageInConversation(w http.ResponseWriter, r *http.Reque
 
 	if err := h.convService.PostConversationMsg(r.Context(), senderID.(int64), int64(conversationID), msgReq.Content); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	utils.WriteJsonMsg(w, http.StatusAccepted, "Msg sent")

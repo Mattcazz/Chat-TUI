@@ -18,7 +18,8 @@ type LoginRequest struct {
 }
 
 type LoginResponse struct {
-	Token string `json:"token"`
+	Username string `json:"username"`
+	Token    string `json:"token"`
 }
 
 type RegisterRequest struct {
@@ -48,7 +49,7 @@ type ContactDetails struct {
 }
 
 type InboxResponse struct {
-	// TODO define inbox response structure
+	// TODO: define inbox response structure
 }
 
 type SendMsgRequest struct {
