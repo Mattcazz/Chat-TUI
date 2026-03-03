@@ -15,7 +15,7 @@ type LoginClient struct {
 	Client BaseClient
 }
 
-func (c *LoginClient) Login(pk []byte, signature []byte) error {
+func (c *LoginClient) Login(pk []byte, signature []byte) (pkg.LoginResponse, error) {
 	login_req := pkg.LoginRequest{
 		PublicKey: string(pk),
 		Signature: string(signature),
@@ -46,9 +46,9 @@ func (c *LoginClient) Login(pk []byte, signature []byte) error {
 
 		c.Client.Config.SetJWT(login_resp.Token)
 
-		return nil
+		return login_resp, nil
 	default:
-		return errors.New("Received an unsupported response status: " + resp.Status);
+		return pkg.LoginResponse{}, errors.New("Received an unsupported response status: " + resp.Status);
 	}
 }
 

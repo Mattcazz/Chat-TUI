@@ -40,7 +40,7 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 		logger.Log.Printf("[NORMAL] Signature created: %s", m.signature)
 	}
 	logger.Log.Printf("[NORMAL] Attempting to log in...")
-	err := m.client.Login(m.pk, m.signature)
+	_, err := m.client.Login(m.pk, m.signature) // TODO get the login response with username
 	if err != nil {
 		log.Panic(err.Error())
 	}
