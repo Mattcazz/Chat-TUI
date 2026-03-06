@@ -23,7 +23,7 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 			if err != nil {
 				logger.Log.Printf("[NORMAL] Couldn't get challenge from server, user does not exist, opening register state")
 				m.state = types.NeedsUsername
-				m.username_input.Reset()
+				m.usernameInput.Reset()
 
 				return m, nil // TODO make this automatically go to next part
 			}
@@ -83,14 +83,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case types.NeedsUsername:
 		// Show username input and intercept enter key
-		m.username_input.Focus()
+		m.usernameInput.Focus()
 
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
 			switch msg.Type {
 			case tea.KeyEnter:
-				logger.Log.Printf("[USERNAME] Attempting to register with username: %s", m.username_input.Value())
-				m.client.Register(m.pk, m.username_input.Value())
+				logger.Log.Printf("[USERNAME] Attempting to register with username: %s", m.usernameInput.Value())
+				m.client.Register(m.pk, m.usernameInput.Value())
 
 				logger.Log.Printf("[USERNAME] Successfully registered, returning to NORMAL mode...")
 				m.signature = nil
@@ -100,11 +100,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		m.username_input, cmd = m.username_input.Update(msg)
+		m.usernameInput, cmd = m.usernameInput.Update(msg)
 		return m, cmd
 	case types.NeedsSSHPassword:
 		// Show password input and intercept enter key
-		m.password_input.Focus()
+		m.passwordInput.Focus()
 
 		switch msg := msg.(type) {
 		case tea.KeyMsg:
@@ -117,12 +117,12 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					m.nonce, err = m.client.RequestChallenge(m.pk)
 					if err != nil {
 						m.state = types.NeedsUsername // should never happen, since this should trip before ssh password
-						m.username_input.Reset() // maybe panic? maybe fatal?
+						m.usernameInput.Reset() // maybe panic? maybe fatal?
 						// TODO return
 					}
 				}
 
-				m.signature, err = createSignature(string(m.nonce), m.sk, []byte(m.password_input.Value()))
+				m.signature, err = createSignature(string(m.nonce), m.sk, []byte(m.passwordInput.Value()))
 				if err != nil {
 					if errors.Is(err, x509.IncorrectPasswordError) {
 						// TODO fucking explode idfk, you shouldn't be allowed to not know your password idk
@@ -138,7 +138,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			}
 		}
 
-		m.password_input, cmd = m.password_input.Update(msg)
+		m.passwordInput, cmd = m.passwordInput.Update(msg)
 		return m, cmd
 	}
 

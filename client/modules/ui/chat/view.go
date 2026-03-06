@@ -7,13 +7,13 @@ import (
 )
 
 func (m Model) View() string {
-	chat_view_content := m.chat_view.View()
-	chat_input_box_content := m.chat_input.View()
+	chatViewContent := m.chatView.View()
+	chatInputBoxContent := m.chatInput.View()
 
 	content := lipgloss.JoinVertical(
 		lipgloss.Center,
-		styles.Default.Border.Render(chat_view_content),
-		styles.Default.Border.Render(chat_input_box_content),
+		styles.Default.Border.Render(chatViewContent),
+		styles.Default.Border.Render(chatInputBoxContent),
 	)
 
 	style := lipgloss.NewStyle()

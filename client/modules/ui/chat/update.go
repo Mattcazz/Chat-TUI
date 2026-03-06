@@ -27,14 +27,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		
 		// Calculate size of each thing
 		// Input gets height of 1, for example
-		chat_view_height := msg.Height - 1
-		chat_input_height := 1
+		chatViewHeight := msg.Height - 1
+		chatInputHeight := 1
 
-		msg.Height = chat_view_height
-		m.chat_view, _ = m.chat_view.Update(msg)
+		msg.Height = chatViewHeight
+		m.chatView, _ = m.chatView.Update(msg)
 
-		msg.Height = chat_input_height
-		m.chat_input, _ = m.chat_input.Update(msg)
+		msg.Height = chatInputHeight
+		m.chatInput, _ = m.chatInput.Update(msg)
 
 		return m, nil
 	case tea.KeyMsg:
@@ -44,14 +44,14 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		}
 	case commands.NewMessageMsg:
 		msg.Author = m.username
-		m.chat_view, cmd = m.chat_view.Update(msg)
+		m.chatView, cmd = m.chatView.Update(msg)
 		return m, cmd
 	case commands.LogInMsg:
 		m.username = msg.Username
 		return m, nil
 	}
 
-	m.chat_input, cmd = m.chat_input.Update(msg)
+	m.chatInput, cmd = m.chatInput.Update(msg)
 
 	return m, cmd
 }

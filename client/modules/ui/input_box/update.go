@@ -21,15 +21,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
-			cmd = commands.NewNewMessageCmd("", m.chat_input.Value(), time.Now())
-			m.chat_input.Reset()
+			cmd = commands.NewNewMessageCmd("", m.chatInput.Value(), time.Now())
+			m.chatInput.Reset()
 			return m, cmd
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
 		}
 	}
 
-	m.chat_input, cmd = m.chat_input.Update(msg)
+	m.chatInput, cmd = m.chatInput.Update(msg)
 
 	return m, cmd
 }

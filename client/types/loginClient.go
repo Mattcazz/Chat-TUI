@@ -16,7 +16,7 @@ type LoginClient struct {
 }
 
 func (c *LoginClient) Login(pk []byte, signature []byte) (pkg.LoginResponse, error) {
-	login_req := pkg.LoginRequest{
+	loginRequest := pkg.LoginRequest{
 		PublicKey: string(pk),
 		Signature: string(signature),
 	}
@@ -24,10 +24,10 @@ func (c *LoginClient) Login(pk []byte, signature []byte) (pkg.LoginResponse, err
 	// req.Header.Add("Content-Type", "application/json")
 
 	logger.Log.Printf("Attempting to log in with:")
-	logger.Log.Printf("\tPublic Key: %s", login_req.PublicKey)
-	logger.Log.Printf("\tSignature: %s", login_req.Signature)
+	logger.Log.Printf("\tPublic Key: %s", loginRequest.PublicKey)
+	logger.Log.Printf("\tSignature: %s", loginRequest.Signature)
 
-	resp, err := c.Client.doRequest("POST", "login", login_req, nil)
+	resp, err := c.Client.doRequest("POST", "login", loginRequest, nil)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -41,26 +41,26 @@ func (c *LoginClient) Login(pk []byte, signature []byte) (pkg.LoginResponse, err
 
 	switch resp.StatusCode {
 	case http.StatusOK:
-		var login_resp pkg.LoginResponse
-		json.Unmarshal(body, &login_resp)
+		var loginResponse pkg.LoginResponse
+		json.Unmarshal(body, &loginResponse)
 
-		c.Client.Config.SetJWT(login_resp.Token)
+		c.Client.Config.SetJWT(loginResponse.Token)
 
-		return login_resp, nil
+		return loginResponse, nil
 	default:
 		return pkg.LoginResponse{}, errors.New("Received an unsupported response status: " + resp.Status);
 	}
 }
 
 func (c *LoginClient) RequestChallenge(pk []byte) ([]byte, error) {
-	login_req := pkg.LoginRequest{
+	loginRequest := pkg.LoginRequest{
 		PublicKey: string(pk),
 	}
 
 	logger.Log.Printf("Attempting to request a challenge with:")
-	logger.Log.Printf("\tPublic Key: %s", login_req.PublicKey)
+	logger.Log.Printf("\tPublic Key: %s", loginRequest.PublicKey)
 
-	resp, err := c.Client.doRequest("POST", "login", login_req, nil)
+	resp, err := c.Client.doRequest("POST", "login", loginRequest, nil)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -75,11 +75,11 @@ func (c *LoginClient) RequestChallenge(pk []byte) ([]byte, error) {
 	switch resp.StatusCode {
 	case http.StatusAccepted:
 		// Nonce coming
-		var challenge_resp pkg.ChallengeResponse
-		json.Unmarshal(body, &challenge_resp)
-		logger.Log.Printf("Challenge nonce received: %s", challenge_resp.Nonce)
+		var challengeResponse pkg.ChallengeResponse
+		json.Unmarshal(body, &challengeResponse)
+		logger.Log.Printf("Challenge nonce received: %s", challengeResponse.Nonce)
 
-		return []byte(challenge_resp.Nonce), nil
+		return []byte(challengeResponse.Nonce), nil
 	default:
 		return nil, errors.New("Received an unsupported response status: " + resp.Status);
 	}
@@ -87,16 +87,16 @@ func (c *LoginClient) RequestChallenge(pk []byte) ([]byte, error) {
 }
 
 func (c *LoginClient) Register(pk []byte, username string) {
-	register_req := pkg.RegisterRequest{
+	registerRequest := pkg.RegisterRequest{
 		PublicKey: string(pk),
 		Username: username,
 	}
 
 	logger.Log.Printf("Attempting to register with:")
-	logger.Log.Printf("\tPublic Key: %s", register_req.PublicKey)
-	logger.Log.Printf("\tUsername: %s", register_req.Username)
+	logger.Log.Printf("\tPublic Key: %s", registerRequest.PublicKey)
+	logger.Log.Printf("\tUsername: %s", registerRequest.Username)
 
-	resp, err := c.Client.doRequest("POST", "register", register_req, nil)
+	resp, err := c.Client.doRequest("POST", "register", registerRequest, nil)
 	if err != nil {
 		log.Panic(err.Error())
 	}

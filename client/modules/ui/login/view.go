@@ -23,14 +23,14 @@ func (m Model) View() string {
 			lipgloss.Center,
 			"Register to CLIt",
 			"",
-			m.username_input.View(),
+			m.usernameInput.View(),
 		)
 	case types.NeedsSSHPassword:
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
-			fmt.Sprintf("SSH key %s requires password", config.Configuration.SSH_key_name),
+			fmt.Sprintf("SSH key %s requires password", config.Configuration.SSHKeyName),
 			"",
-			m.password_input.View(),
+			m.passwordInput.View(),
 		)
 
 	}

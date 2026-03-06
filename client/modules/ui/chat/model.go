@@ -8,8 +8,8 @@ import (
 )
 
 type Model struct {
-	chat_view tea.Model
-	chat_input tea.Model
+	chatView tea.Model
+	chatInput tea.Model
 
 	username string
 
@@ -20,8 +20,8 @@ type Model struct {
 
 func New() Model {
 	return Model{
-		chat_view: chat_view.New(),
-		chat_input: input_box.New(),
+		chatView: chat_view.New(),
+		chatInput: input_box.New(),
 		err: nil,
 	}
 }

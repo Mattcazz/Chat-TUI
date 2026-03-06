@@ -6,7 +6,7 @@ import (
 
 type Model struct {
 	// db probs //
-	chat_input textinput.Model
+	chatInput textinput.Model
 	err error
 	width int
 	height int
@@ -17,7 +17,7 @@ func New() Model {
 	ti.Focus()
 	
 	return Model{
-		chat_input: ti,
+		chatInput: ti,
 		err: nil,
 	}
 }

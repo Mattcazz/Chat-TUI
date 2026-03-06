@@ -11,16 +11,16 @@ import (
 )
 
 func getSSHKeys() ([]byte, []byte) {
-	ssh_key_path := os.Getenv("HOME") + "/.ssh/" + config.Configuration.SSH_key_name
+	sshKeyPath := os.Getenv("HOME") + "/.ssh/" + config.Configuration.SSHKeyName
 
-	pkPath := ssh_key_path + ".pub"
+	pkPath := sshKeyPath + ".pub"
 	pkBytes, err := os.ReadFile(pkPath)
 	if err != nil {
 		panic("Could not read public key: " + err.Error())
 	}
 	pkBytes = bytes.TrimSpace(pkBytes)
 
-	skPath := ssh_key_path
+	skPath := sshKeyPath
 	skBytes, err := os.ReadFile(skPath)
 	if err != nil {
 		panic("Could not read private key: " + err.Error())

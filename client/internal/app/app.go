@@ -18,8 +18,8 @@ import (
 
 type App struct {
 	state types.SessionState
-	login_model tea.Model
-	chat_model tea.Model
+	loginModel tea.Model
+	chatModel tea.Model
 
 	client *types.BaseClient
 
@@ -30,18 +30,18 @@ type App struct {
 }
 
 func New() App {
-	app_client := http.Client{
+	appClient := http.Client{
 		Timeout: time.Second * 10,
 	}
 	config.LoadConfig()
 
 	logger.Init()
 
-	client := &types.BaseClient{Client: app_client, Config: config.Configuration} // TODO only pass host and port
+	client := &types.BaseClient{Client: appClient, Config: config.Configuration} // TODO only pass host and port
 	return App{
 		state: types.LoginView,
-		login_model: login.NewLoginModel(client),
-		chat_model: chat.New(),
+		loginModel: login.NewLoginModel(client),
+		chatModel: chat.New(),
 		client: client,
 		err: nil,
 	}
@@ -49,8 +49,8 @@ func New() App {
 
 func (a App) Init() tea.Cmd {
 	return tea.Batch(
-		a.login_model.Init(),
-		a.chat_model.Init(),
+		a.loginModel.Init(),
+		a.chatModel.Init(),
 	)
 }
 
@@ -65,7 +65,7 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case commands.LogInMsg:
 		logger.Log.Printf("[APP] Successfully logged in with username: %s", msg.Username)
 		m.username = msg.Username
-		m.chat_model, _ = m.chat_model.Update(msg)
+		m.chatModel, _ = m.chatModel.Update(msg)
 		logger.Log.Printf("[APP] Switching to chat view...")
 		m.state = types.ChatView
 
@@ -79,18 +79,18 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		msg.Height -= lipgloss.NormalBorder().GetTopSize()
 		msg.Height -= lipgloss.NormalBorder().GetBottomSize()
 
-		m.login_model, _ = m.login_model.Update(msg)
-		m.chat_model, _ = m.chat_model.Update(msg)
+		m.loginModel, _ = m.loginModel.Update(msg)
+		m.chatModel, _ = m.chatModel.Update(msg)
 
 		return m, nil
 	}
 
 	switch m.state {
 	case types.LoginView:
-		m.login_model, cmd = m.login_model.Update(msg)
+		m.loginModel, cmd = m.loginModel.Update(msg)
 		return m, cmd
 	case types.ChatView:
-		m.chat_model, cmd = m.chat_model.Update(msg)
+		m.chatModel, cmd = m.chatModel.Update(msg)
 		return m, cmd
 	}
 
@@ -98,21 +98,21 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (m App) View() string {
-	var model_content string
+	var modelContent string
 
 	switch m.state {
 	case types.LoginView:
-		model_content = m.login_model.View()
+		modelContent = m.loginModel.View()
 	case types.ChatView:
-		model_content = m.chat_model.View()
+		modelContent = m.chatModel.View()
 	default:
-		model_content = "Ya broke it"
+		modelContent = "Ya broke it"
 	}
 
 	return lipgloss.Place(
 		m.width, m.height,
 		lipgloss.Center, lipgloss.Center,
-		styles.Default.Border.Render(model_content),
+		styles.Default.Border.Render(modelContent),
 	)
 }
 

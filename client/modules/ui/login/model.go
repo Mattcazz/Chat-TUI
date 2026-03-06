@@ -7,8 +7,8 @@ import (
 )
 
 type Model struct {
-	username_input textinput.Model
-	password_input textinput.Model
+	usernameInput textinput.Model
+	passwordInput textinput.Model
 	pk []byte
 	sk []byte
 	nonce []byte
@@ -24,21 +24,21 @@ type Model struct {
 }
 
 func NewLoginModel(baseClient *types.BaseClient) Model {
-	username_ti := textinput.New()
-	username_ti.Placeholder = "Username"
-	username_ti.Focus()
-	username_ti.CharLimit = 25
-	username_ti.Width = 28
+	usernameTi := textinput.New()
+	usernameTi.Placeholder = "Username"
+	usernameTi.Focus()
+	usernameTi.CharLimit = 25
+	usernameTi.Width = 28
 
-	password_ti := textinput.New()
-	password_ti.Placeholder = "Password"
-	password_ti.EchoMode = textinput.EchoNone
-	password_ti.CharLimit = 0 // inf
-	password_ti.Width = 0
+	passwordTi := textinput.New()
+	passwordTi.Placeholder = "Password"
+	passwordTi.EchoMode = textinput.EchoNone
+	passwordTi.CharLimit = 0 // inf
+	passwordTi.Width = 0
 
 	return Model{
-		username_input: username_ti,
-		password_input: password_ti,
+		usernameInput: usernameTi,
+		passwordInput: passwordTi,
 
 		pk: nil,
 		sk: nil,
