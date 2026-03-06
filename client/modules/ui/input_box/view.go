@@ -5,7 +5,7 @@ import (
 )
 
 func (m Model) View() string {
-	content := m.chat_input.View()
+	content := m.chatInput.View()
 
 	style := lipgloss.NewStyle()
 

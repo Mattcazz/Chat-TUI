@@ -1,7 +1,7 @@
 package commands
 
 import (
-	"clit_client/types"
+	"github.com/Mattcazz/Chat-TUI/client/types"
 
 	tea "github.com/charmbracelet/bubbletea"
 )

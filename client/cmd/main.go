@@ -1,7 +1,7 @@
 package main
 
 import (
-	main_model "clit_client/internal/app"
+	main_model "github.com/Mattcazz/Chat-TUI/client/internal/app"
 	"log"
 
 	tea "github.com/charmbracelet/bubbletea"
