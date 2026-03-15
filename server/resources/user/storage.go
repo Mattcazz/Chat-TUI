@@ -78,7 +78,6 @@ func (s *UserStore) UpdateUser(ctx context.Context, c *User) error {
 	query := `UPDATE users SET username = $1, public_key = $2 WHERE id = $3`
 
 	_, err := s.db.ExecContext(ctx, query, c.Username, c.PublicKey, c.ID)
-
 	if err != nil {
 		log.Printf("UserStore.UpdateUser: Failed to update user with ID %d: %v", c.ID, err)
 		return err
@@ -93,7 +92,6 @@ func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
 	query := `DELETE FROM users WHERE id = $1`
 
 	_, err := s.db.ExecContext(ctx, query, id)
-
 	if err != nil {
 		log.Printf("UserStore.DeleteUser: Failed to delete user with ID %d: %v", id, err)
 		return err
@@ -101,6 +99,12 @@ func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
 
 	log.Printf("UserStore.DeleteUser: Successfully deleted user with ID %d", id)
 	return nil
+}
+
+func (s *UserStore) GetUserConversations(ctx context.Context, userID int64) ([]*pkg.InboxConversationResponse, error) {
+	var conversations []*pkg.InboxConversationResponse
+
+	return conversations, nil
 }
 
 func scanUser(row *sql.Row) (*User, error) {
@@ -151,7 +155,6 @@ func (s *ContactStore) CreateContact(ctx context.Context, c *Contact) error {
 	query := `INSERT INTO contacts (from_user_id, to_user_id, nickname, status, created_at) VALUES ($1, $2, $3, $4::contact_status, $5)`
 
 	_, err := s.db.ExecContext(ctx, query, c.FromUserID, c.ToUserID, c.Nickname, c.Status, c.CreatedAt)
-
 	if err != nil {
 		log.Printf("ContactStore.CreateContact: Failed to create contact from user ID %d to user ID %d: %v", c.FromUserID, c.ToUserID, err)
 		return err
@@ -166,7 +169,6 @@ func (s *ContactStore) UpdateContact(ctx context.Context, c *Contact) error {
 	query := `UPDATE contacts SET nickname = $1, status = $2::contact_status, updated_at = $3 WHERE id = $4`
 
 	_, err := s.db.ExecContext(ctx, query, c.Nickname, c.Status, c.UpdatedAt, c.ID)
-
 	if err != nil {
 		log.Printf("ContactStore.UpdateContact: Failed to update contact with ID %d: %v", c.ID, err)
 		return err
@@ -181,7 +183,6 @@ func (s *ContactStore) DeleteContact(ctx context.Context, id int64) error {
 	query := `DELETE FROM contacts WHERE id = $1`
 
 	_, err := s.db.ExecContext(ctx, query, id)
-
 	if err != nil {
 		log.Printf("ContactStore.DeleteContact: Failed to delete contact with ID %d: %v", id, err)
 		return err
