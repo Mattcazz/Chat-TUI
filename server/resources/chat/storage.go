@@ -62,8 +62,16 @@ func (s *ConversationStore) DeleteMessage(ctx context.Context, msgID int64) erro
 	return err
 }
 
-func (s *ConversationStore) GetMessage(context.Context, int64) *Message {
-	return nil
+func (s *ConversationStore) GetMessage(ctx context.Context, id int64) (*Message, error) {
+	query := `SELECT sender_id, content, conversation_id, created_at FROM messages WHERE id = $1`
+
+	var msg Message
+	err := s.db.QueryRowContext(ctx, query, id).Scan(&msg.SenderID, &msg.Content, &msg.ConversationID, &msg.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &msg, nil
 }
 
 func (s *ConversationStore) CreateConversation(ctx context.Context, conversation *Conversation) error {
@@ -77,12 +85,19 @@ func (s *ConversationStore) CreateConversation(ctx context.Context, conversation
 	return nil
 }
 
-func (s *ConversationStore) DeleteConversation(context.Context, int64) error {
-	return nil
+func (s *ConversationStore) DeleteConversation(ctx context.Context, id int64) error {
+	query := `DELETE FROM conversations WHERE id = $1`
+
+	_, err := s.db.ExecContext(ctx, query, id)
+
+	return err
 }
 
-func (s *ConversationStore) EditConversation(context.Context, *Conversation) error {
-	return nil
+func (s *ConversationStore) EditConversation(ctx context.Context, conversation *Conversation) error {
+	query := `UPDATE conversations SET last_message_at = $1, last_message_preview = $2 
+						WHERE id = $3`
+
+	return s.db.QueryRowContext(ctx, query, conversation.LastMsgAt, conversation.LastMsg, conversation.ID).Err()
 }
 
 func (s *ConversationStore) GetConversation(ctx context.Context, id, limit int64) (*pkg.ConversationResponse, error) {
@@ -113,10 +128,6 @@ func (s *ConversationStore) GetConversation(ctx context.Context, id, limit int64
 	}
 
 	return conversation, nil
-}
-
-func (s *ConversationStore) GetConversationHistory(ctx context.Context, converastionID, limit int64) (*pkg.ConversationResponse, error) {
-	return nil, nil
 }
 
 // TODO: nickname and see if i need to return the username of the other person.

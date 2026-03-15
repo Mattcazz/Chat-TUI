@@ -15,9 +15,8 @@ type ConversationRepository interface {
 	DeleteConversation(context.Context, int64) error
 	EditConversation(context.Context, *Conversation) error
 	GetConversation(context.Context, int64, int64) (*pkg.ConversationResponse, error)
-	GetConversationHistory(ctx context.Context, converastionID, limit int64) (*pkg.ConversationResponse, error)
 	DeleteMessage(context.Context, int64) error
-	GetMessage(context.Context, int64) *Message
+	GetMessage(context.Context, int64) (*Message, error)
 	CreateMessage(context.Context, *Message) (*pkg.MsgResponse, error)
 	GetConversationDM(ctx context.Context, firstID, secondID, limit int64) (*pkg.ConversationResponse, error)
 }
