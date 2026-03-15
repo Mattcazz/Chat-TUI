@@ -1,6 +1,8 @@
 package pkg
 
-import "time"
+import (
+	"time"
+)
 
 type ChallengeRequest struct {
 	PublicKey string `json:"public_key"`
@@ -45,6 +47,39 @@ type ContactDetails struct {
 	CreatedAt time.Time `json:"created_at"`
 }
 
+type InboxConversationResponse struct {
+	UserName  string    `json:"username"`
+	ID        int64     `json:"id"`
+	LastMsg   string    `json:"last_message"`
+	LastMsgAt time.Time `json:"last_message_at"`
+}
+
+type UserResponse struct {
+	Username string `json:"username"`
+	ID       int64  `json:"id"`
+}
+
 type InboxResponse struct {
-	// TODO define inbox response structure
+	User          *UserResponse               `json:"user"`
+	Conversations []InboxConversationResponse `json:"conversations"`
+}
+
+type SendMsgRequest struct {
+	Content string `json:"content"`
+}
+
+type CreateConversationDmRequest struct {
+	ParticipantID int64 `json:"participant_id"`
+}
+
+type MsgResponse struct {
+	UserName  string    `json:"username"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type ConversationResponse struct {
+	ID                       int64         `json:"id"`
+	OtherParticipantNickname string        `json:"other_participant_nickname"`
+	Messages                 []MsgResponse `json:"messages"`
 }

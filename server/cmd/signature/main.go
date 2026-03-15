@@ -9,16 +9,17 @@ import (
 	"golang.org/x/crypto/ssh"
 )
 
-// Usage: go run cmd/tools/signer.go <NONCE_STRING>
+// Usage: go run cmd/tools/signer.go <KEY_PATH> <NONCE_STRING>
 func main() {
-	if len(os.Args) < 2 {
-		fmt.Println("Please provide the nonce as an argument")
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: signer <key_path> <nonce>")
 		return
 	}
-	nonce := os.Args[1]
 
-	// 1. Load your private key (Change path if needed)
-	keyPath := os.Getenv("HOME") + "/.ssh/id_ed25519"
+	keyPath := os.Args[1]
+	nonce := os.Args[2]
+
+	// 1. Load your private key
 	keyBytes, err := os.ReadFile(keyPath)
 	if err != nil {
 		panic("Could not read private key: " + err.Error())
