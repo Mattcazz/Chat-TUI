@@ -32,15 +32,27 @@ func (s *ConversationStore) AddParticipantToConversation(ctx context.Context, co
 	return err
 }
 
-func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) error {
-	query := `INSERT INTO messages (conversation_id, sender_id, content, created_at) VALUES ($1, $2, $3, $4)`
+func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) (*pkg.MsgResponse, error) {
+	query := `WITH inserted as (
+						INSERT INTO messages (conversation_id, sender_id, content, created_at) 
+						VALUES ($1, $2, $3, $4)
+						RETURNING *)
 
-	_, err := s.db.ExecContext(ctx, query, msg.ConversationID, msg.SenderID, msg.Content, msg.CreatedAt)
+						SELECT u.username, inserted.content, inserted.created_at
+						FROM inserted JOIN users u ON inserted.sender_id = u.id`
+
+	rows, err := s.db.QueryContext(ctx, query, msg.ConversationID, msg.SenderID, msg.Content, msg.CreatedAt)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
-	return nil
+	if rows.Next() {
+		response := &pkg.MsgResponse{}
+		rows.Scan(&response.UserName, &response.Content, &response.CreatedAt)
+		return response, nil
+	} else {
+		return nil, fmt.Errorf("failed to insert message")
+	}
 }
 
 func (s *ConversationStore) DeleteMessage(ctx context.Context, msgID int64) error {
