@@ -1,6 +1,7 @@
 package chat
 
 import (
+	"log"
 	"sync"
 	"time"
 
@@ -23,6 +24,8 @@ func (b *Broker) Subscribe(convID int64) chan pkg.MsgResponse {
 	b.mu.Lock()
 	b.subscribers[convID] = append(b.subscribers[convID], ch)
 	b.mu.Unlock()
+
+	log.Printf("New subscriber added to conversation %d\n", convID)
 	return ch
 }
 
@@ -33,6 +36,7 @@ func (b *Broker) Unsubscribe(convID int64, ch chan pkg.MsgResponse) {
 	for i, sub := range subs {
 		if sub == ch {
 			b.subscribers[convID] = append(subs[:i], subs[i+1:]...) // remove the subscriber at index i
+			log.Printf("Subscriber removed from conversation %d\n", convID)
 			break
 		}
 	}
@@ -45,7 +49,9 @@ func (b *Broker) Publish(convID int64, msg pkg.MsgResponse) {
 		go func(c chan pkg.MsgResponse) {
 			select {
 			case c <- msg:
+				log.Printf("Message published to conversation %d\n", convID)
 			case <-time.After(5 * time.Second): // client not consuming, drop message
+				log.Printf("Message dropped for conversation %d due to timeout\n", convID)
 			}
 		}(ch)
 	}
