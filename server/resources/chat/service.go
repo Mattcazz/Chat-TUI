@@ -12,12 +12,14 @@ import (
 type Service struct {
 	conversationRepo ConversationRepository
 	tx               *db.TxManager
+	broker           *Broker
 }
 
-func NewService(conversationRepo ConversationRepository, tx *db.TxManager) *Service {
+func NewService(conversationRepo ConversationRepository, tx *db.TxManager, broker *Broker) *Service {
 	return &Service{
 		conversationRepo: conversationRepo,
 		tx:               tx,
+		broker:           broker,
 	}
 }
 
@@ -28,7 +30,15 @@ func (s *Service) PostConversationMsg(ctx context.Context, senderID, convID int6
 		Content:        content,
 		CreatedAt:      time.Now(),
 	}
-	return s.conversationRepo.CreateMessage(ctx, msg)
+
+	msgResp, err := s.conversationRepo.CreateMessage(ctx, msg)
+	if err != nil {
+		return err
+	}
+
+	s.broker.Publish(convID, *msgResp)
+
+	return nil
 }
 
 // user wants to start conversation with a contact

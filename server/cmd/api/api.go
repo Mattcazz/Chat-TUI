@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/go-chi/chi/middleware"
 	"github.com/go-chi/chi/v5"
@@ -40,7 +39,7 @@ func (a *APIServer) Run() error {
 	// Set a timeout value on the request context (ctx), that will signal
 	// through ctx.Done() that the request has timed out and further
 	// processing should be stopped.
-	r.Use(middleware.Timeout(60 * time.Second))
+	// r.Use(middleware.Timeout(60 * time.Second)) Commented out for stream processing. However we should consider adding timeouts to non-streaming endpoints.
 
 	txManager := db.NewTxManager(a.db)
 
@@ -56,9 +55,10 @@ func (a *APIServer) Run() error {
 	fileHandler := file.NewHandler(fileService)
 	fileHandler.RegisterRoutes(r)
 
+	broker := chat.NewBroker() // for SSE implementation
 	conversationStore := chat.NewConversationStore(a.db)
-	conversationService := chat.NewService(conversationStore, txManager)
-	conversationHandler := chat.NewHandler(conversationService)
+	conversationService := chat.NewService(conversationStore, txManager, broker)
+	conversationHandler := chat.NewHandler(conversationService, broker)
 	conversationHandler.RegisterRoutes(r)
 
 	log.Println("Listening on address ", a.addr)
