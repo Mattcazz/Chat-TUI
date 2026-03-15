@@ -80,6 +80,7 @@ func (h *Handler) postMessageInConversation(w http.ResponseWriter, r *http.Reque
 
 	if err := json.NewDecoder(r.Body).Decode(&msgReq); err != nil {
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
+		return
 	}
 
 	conversationIDStr := chi.URLParam(r, "conversation_id")
