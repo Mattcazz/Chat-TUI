@@ -15,7 +15,7 @@ type UserRepository interface {
 	GetUserByPublicKey(ctx context.Context, publicKey string) (*User, error)
 	UpdateUser(ctx context.Context, u *User) error
 	DeleteUser(ctx context.Context, id int64) error
-	GetUserConversations(ctx context.Context, userID int64) ([]*pkg.InboxConversationResponse, error)
+	GetUserConversations(ctx context.Context, userID int64) ([]pkg.InboxConversationResponse, error)
 }
 
 type User struct {

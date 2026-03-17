@@ -138,15 +138,30 @@ func (s *Service) VerifyAndLogin(ctx context.Context, publicKey, signature strin
 }
 
 func (s *Service) GetInbox(ctx context.Context, userID int64) (*pkg.InboxResponse, error) {
-	// TODO implement GetInbox logic
+	user, err := s.userRepo.GetUserByID(ctx, userID)
+	if err != nil {
+		return nil, fmt.Errorf("User with ID %d does not exist", userID)
+	}
 
-	return &pkg.InboxResponse{}, nil
+	conversations, err := s.userRepo.GetUserConversations(ctx, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	response := &pkg.InboxResponse{
+		Conversations: conversations,
+		User: &pkg.UserResponse{
+			Username: user.Username,
+			ID:       user.ID,
+		},
+	}
+
+	return response, nil
 }
 
 func (s *Service) GetContacts(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
 	log.Printf("GetContacts: Fetching contacts for user ID %d", userID)
 	contacts, err := s.contactRepo.GetContactsByUserID(ctx, userID)
-
 	if err != nil {
 		log.Printf("GetContacts: Failed to retrieve contacts for user ID %d: %v", userID, err)
 		return nil, err
@@ -238,7 +253,6 @@ func (s *Service) ContactRequest(ctx context.Context, fromUserID int64, toPk, ni
 func (s *Service) GetContactRequests(ctx context.Context, userID int64) ([]*pkg.ContactDetails, error) {
 	log.Printf("GetContactRequests: Fetching contact requests for user ID %d", userID)
 	contacts, err := s.contactRepo.GetContactRequestsByUserID(ctx, userID)
-
 	if err != nil {
 		log.Printf("GetContactRequests: Failed to retrieve contact requests for user ID %d: %v", userID, err)
 		return nil, err

@@ -13,7 +13,7 @@ type mockUserRepo struct {
 	createUserFn           func(ctx context.Context, u *User) (*User, error)
 	getUserByIDFn          func(ctx context.Context, id int64) (*User, error)
 	getUserByPublicKeyFn   func(ctx context.Context, publicKey string) (*User, error)
-	getUserConversationsFn func(ctx context.Context, userID int64) ([]*pkg.InboxConversationResponse, error)
+	getUserConversationsFn func(ctx context.Context, userID int64) ([]pkg.InboxConversationResponse, error)
 	updateUserFn           func(ctx context.Context, u *User) error
 	deleteUserFn           func(ctx context.Context, id int64) error
 }
@@ -56,11 +56,11 @@ func (m *mockUserRepo) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (m *mockUserRepo) GetUserConversations(ctx context.Context, userID int64) ([]*pkg.InboxConversationResponse, error) {
+func (m *mockUserRepo) GetUserConversations(ctx context.Context, userID int64) ([]pkg.InboxConversationResponse, error) {
 	if m.getUserConversationsFn != nil {
-		return m.GetUserConversations(ctx, userID)
+		return m.getUserConversationsFn(ctx, userID)
 	}
-	response := []*pkg.InboxConversationResponse{{ /* Fill Mock Data as required */ }}
+	response := []pkg.InboxConversationResponse{{ /* Fill Mock Data as required */ }}
 	return response, sql.ErrNoRows
 }
 
