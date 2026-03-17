@@ -45,7 +45,11 @@ func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) (*p
 	query := `WITH inserted as (
 						INSERT INTO messages (conversation_id, sender_id, content, created_at)
 						VALUES ($1, $2, $3, $4)
-						RETURNING *)
+						RETURNING *),
+						updated_conversation as (
+						UPDATE conversations SET last_message_at = $4, last_message_preview = $3
+						WHERE id = $1
+						RETURNING id)
 
 						SELECT u.username, inserted.content, inserted.created_at
 						FROM inserted JOIN users u ON inserted.sender_id = u.id`
