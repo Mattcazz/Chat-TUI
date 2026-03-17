@@ -25,7 +25,7 @@ func NewHandler(s *Service, broker *Broker) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
-	r.Route("/conversation", func(r chi.Router) {
+	r.Route("/conversations", func(r chi.Router) {
 		r.Post("/", middleware.JWTAuth(h.postConversationDM))
 		r.Get("/{conversation_id}", middleware.JWTAuth(h.getConversation))
 		r.Delete("/{conversation_id}", middleware.JWTAuth(h.deleteConversation))
