@@ -101,9 +101,33 @@ func (s *UserStore) DeleteUser(ctx context.Context, id int64) error {
 	return nil
 }
 
-func (s *UserStore) GetUserConversations(ctx context.Context, userID int64) ([]*pkg.InboxConversationResponse, error) {
-	var conversations []*pkg.InboxConversationResponse
+func (s *UserStore) GetUserConversations(ctx context.Context, userID int64) ([]pkg.InboxConversationResponse, error) {
+	// TODO: general todo but we need to manage group chats at some point, this query only works for 1-on-1 conversations. We also need to add pagination here at some point
+	var conversations []pkg.InboxConversationResponse
+	log.Printf("UserStore.GetUserConversations: retrieving user %d conversations", userID)
 
+	query := `SELECT c.id, u.username, c.last_message_preview, c.last_message_at
+						FROM conversations c
+						JOIN conversation_participants cp ON c.id = cp.conversation_id
+						JOIN users u ON (u.id = cp.user_id)
+						WHERE u.id != $1
+						AND EXISTS (
+							SELECT 1 FROM conversation_participants 
+							WHERE conversation_id = c.id AND user_id = $1
+						)
+						ORDER BY c.last_message_at DESC;`
+
+	rows, err := s.db.QueryContext(ctx, query, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	var conversation pkg.InboxConversationResponse
+	for rows.Next() {
+		rows.Scan(&conversation.ID, &conversation.UserName, &conversation.LastMsg, &conversation.LastMsgAt)
+		conversations = append(conversations, conversation)
+		log.Printf("UserStore.GetUserConversations: conversation %d retrieved", conversation.ID)
+	}
 	return conversations, nil
 }
 

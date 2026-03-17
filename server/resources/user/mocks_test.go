@@ -10,11 +10,12 @@ import (
 // ---- Mock UserRepository ----
 
 type mockUserRepo struct {
-	createUserFn         func(ctx context.Context, u *User) (*User, error)
-	getUserByIDFn        func(ctx context.Context, id int64) (*User, error)
-	getUserByPublicKeyFn func(ctx context.Context, publicKey string) (*User, error)
-	updateUserFn         func(ctx context.Context, u *User) error
-	deleteUserFn         func(ctx context.Context, id int64) error
+	createUserFn           func(ctx context.Context, u *User) (*User, error)
+	getUserByIDFn          func(ctx context.Context, id int64) (*User, error)
+	getUserByPublicKeyFn   func(ctx context.Context, publicKey string) (*User, error)
+	getUserConversationsFn func(ctx context.Context, userID int64) ([]pkg.InboxConversationResponse, error)
+	updateUserFn           func(ctx context.Context, u *User) error
+	deleteUserFn           func(ctx context.Context, id int64) error
 }
 
 func (m *mockUserRepo) WithTx(_ *sql.Tx) *UserStore { return nil }
@@ -53,6 +54,14 @@ func (m *mockUserRepo) DeleteUser(ctx context.Context, id int64) error {
 		return m.deleteUserFn(ctx, id)
 	}
 	return nil
+}
+
+func (m *mockUserRepo) GetUserConversations(ctx context.Context, userID int64) ([]pkg.InboxConversationResponse, error) {
+	if m.getUserConversationsFn != nil {
+		return m.getUserConversationsFn(ctx, userID)
+	}
+	response := []pkg.InboxConversationResponse{{ /* Fill Mock Data as required */ }}
+	return response, sql.ErrNoRows
 }
 
 // ---- Mock ContactRepository ----
