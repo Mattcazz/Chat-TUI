@@ -1,22 +1,24 @@
 package file
 
+import "context"
+
 type FileRepository interface {
-	CreateFile(file *File) error
-	DeleteFile(fileID int64) error
-	InitUploadSession(uploadSession *UploadSession) error
-	DeleteUploadSession(sessionID int64) error
-	InsertFileChunk(fileChunk *FileChunk) error
-	DeleteFileChunk(chunkID int64) error
+	CreateFile(ctx context.Context, file *File) error
+	DeleteFile(ctx context.Context, fileID int64) error
+	InitUploadSession(ctx context.Context, uploadSession *UploadSession) error
+	DeleteUploadSession(ctx context.Context, sessionID int64) error
+	InsertFileChunk(ctx context.Context, fileChunk *FileChunk) error
+	DeleteFileChunksFromUploadSession(ctx context.Context, sessionID int64) error
 }
 
 type File struct {
-	ID            int64  `json:"id"`
-	FileName      string `json:"file_name"`
-	ConvesationID int64  `json:"conversation_id"`
-	Size          int64  `json:"size"`
-	Status        string `json:"status"`
-	Checksum      string `json:"checksum"`
-	CreatedAt     int64  `json:"created_at"`
+	ID             int64  `json:"id"`
+	FileName       string `json:"file_name"`
+	ConversationID int64  `json:"conversation_id"`
+	Size           int64  `json:"size"`
+	Status         string `json:"status"`
+	Checksum       string `json:"checksum"`
+	CreatedAt      int64  `json:"created_at"`
 }
 
 type UploadSession struct {
@@ -31,6 +33,6 @@ type FileChunk struct {
 	ID        int64  `json:"id"`
 	Index     int64  `json:"index"`
 	SessionID int64  `json:"session_id"`
-	CretaedAt int64  `json:"created_at"`
+	CreatedAt int64  `json:"created_at"`
 	Checksum  string `json:"checksum"`
 }
