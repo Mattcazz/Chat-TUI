@@ -83,3 +83,14 @@ type ConversationResponse struct {
 	OtherParticipantNickname string        `json:"other_participant_nickname"`
 	Messages                 []MsgResponse `json:"messages"`
 }
+
+// Files types
+
+type InitFileUploadRequest struct {
+	ToUserID    int64  `json:"to_user_id"`
+	FileName    string `json:"file_name"`
+	TotalSize   int64  `json:"total_size"`
+	TotalChunks int64  `json:"total_chunks"`
+}
+
+type UploadFileChunkRequest struct{}
