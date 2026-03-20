@@ -2,6 +2,7 @@ package file
 
 import (
 	"context"
+	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
 	"github.com/Mattcazz/Chat-TUI/server/db"
@@ -19,12 +20,48 @@ func NewService(fr FileRepository, tx *db.TxManager) *Service {
 	}
 }
 
-func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileUploadRequest) error {
-	return nil
+func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileUploadRequest) (*pkg.InitFileUploadResponse, error) {
+	file := &File{
+		FileName:       initFileReq.FileName,
+		ConversationID: initFileReq.ConversationID,
+		Size:           initFileReq.TotalSize,
+		Checksum:       "", // TODO: what to do here? client should send checksum of the file or we calculate it on the server after receiving all chunks?
+		Status:         FileStatusUploading,
+		CreatedAt:      time.Now(),
+	}
+
+	if err := s.fileRepo.CreateFile(ctx, file); err != nil {
+		return nil, err
+	}
+
+	uploadSession := &UploadSession{
+		FileID:      file.ID,
+		TotalChunks: initFileReq.TotalChunks,
+		Status:      FileSessionStatusUploading,
+		ExpiresAt:   time.Now().Add(time.Duration(TimeToExpireUploadSession) * time.Second),
+	}
+
+	if err := s.fileRepo.InitUploadSession(ctx, uploadSession); err != nil {
+		return nil, err
+	}
+
+	resp := &pkg.InitFileUploadResponse{
+		SessionID: uploadSession.ID,
+		FileID:    file.ID,
+	}
+
+	return resp, nil
 }
 
 func (s *Service) UploadFileChunk(ctx context.Context, uploadChunkReq *pkg.UploadFileChunkRequest) error {
-	return nil
+	fileChunk := &FileChunk{
+		Index:     uploadChunkReq.ChunkIndex,
+		SessionID: uploadChunkReq.SessionID,
+		CreatedAt: time.Now(),
+		Checksum:  "", // TODO: same as above, client should send checksum of the chunk or we calculate it on the server after receiving the chunk?
+	}
+
+	return s.fileRepo.InsertFileChunk(ctx, fileChunk)
 }
 
 func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error {

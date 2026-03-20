@@ -36,7 +36,7 @@ func (s *FileStore) InitUploadSession(ctx context.Context, uploadSession *Upload
 						VALUES ($1, $2, $3, $4) 
 						RETURNING id`
 
-	err := s.db.QueryRowContext(ctx, query, uploadSession.FileID, uploadSession.TotalChunks, uploadSession.Status, uploadSession.ExpiredAt).Scan(&uploadSession.ID)
+	err := s.db.QueryRowContext(ctx, query, uploadSession.FileID, uploadSession.TotalChunks, uploadSession.Status, uploadSession.ExpiresAt).Scan(&uploadSession.ID)
 	return err
 }
 
@@ -59,4 +59,11 @@ func (s *FileStore) DeleteFileChunksFromUploadSession(ctx context.Context, sessi
 	query := `DELETE FROM file_chunks WHERE session_id = $1`
 	_, err := s.db.ExecContext(ctx, query, sessionID)
 	return err
+}
+
+func (s *FileStore) GetChunksCountForSession(ctx context.Context, sessionID int64) (int64, error) {
+	query := `SELECT COUNT(*) FROM file_chunks WHERE session_id = $1`
+	var count int64
+	err := s.db.QueryRowContext(ctx, query, sessionID).Scan(&count)
+	return count, err
 }

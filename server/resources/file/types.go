@@ -1,6 +1,9 @@
 package file
 
-import "context"
+import (
+	"context"
+	"time"
+)
 
 type FileRepository interface {
 	CreateFile(ctx context.Context, file *File) error
@@ -9,30 +12,31 @@ type FileRepository interface {
 	DeleteUploadSession(ctx context.Context, sessionID int64) error
 	InsertFileChunk(ctx context.Context, fileChunk *FileChunk) error
 	DeleteFileChunksFromUploadSession(ctx context.Context, sessionID int64) error
+	GetChunksCountForSession(ctx context.Context, sessionID int64) (int64, error)
 }
 
 type File struct {
-	ID             int64  `json:"id"`
-	FileName       string `json:"file_name"`
-	ConversationID int64  `json:"conversation_id"`
-	Size           int64  `json:"size"`
-	Status         string `json:"status"`
-	Checksum       string `json:"checksum"`
-	CreatedAt      int64  `json:"created_at"`
+	ID             int64      `json:"id"`
+	FileName       string     `json:"file_name"`
+	ConversationID int64      `json:"conversation_id"`
+	Size           int64      `json:"size"`
+	Status         FileStatus `json:"status"`
+	Checksum       string     `json:"checksum"`
+	CreatedAt      time.Time  `json:"created_at"`
 }
 
 type UploadSession struct {
-	ID          int64  `json:"id"`
-	FileID      int64  `json:"file_id"`
-	TotalChunks int64  `json:"total_chunks"`
-	Status      string `json:"status"`
-	ExpiredAt   int64  `json:"expired_at"`
+	ID          int64               `json:"id"`
+	FileID      int64               `json:"file_id"`
+	TotalChunks int64               `json:"total_chunks"`
+	Status      UploadSessionStatus `json:"status"`
+	ExpiresAt   time.Time           `json:"expires_at"`
 }
 
 type FileChunk struct {
-	ID        int64  `json:"id"`
-	Index     int64  `json:"index"`
-	SessionID int64  `json:"session_id"`
-	CreatedAt int64  `json:"created_at"`
-	Checksum  string `json:"checksum"`
+	ID        int64     `json:"id"`
+	Index     int64     `json:"index"`
+	SessionID int64     `json:"session_id"`
+	CreatedAt time.Time `json:"created_at"`
+	Checksum  string    `json:"checksum"`
 }

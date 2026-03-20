@@ -87,10 +87,18 @@ type ConversationResponse struct {
 // Files types
 
 type InitFileUploadRequest struct {
-	ToUserID    int64  `json:"to_user_id"`
-	FileName    string `json:"file_name"`
-	TotalSize   int64  `json:"total_size"`
-	TotalChunks int64  `json:"total_chunks"`
+	ConversationID int64  `json:"conversation_id"`
+	FileName       string `json:"file_name"`
+	TotalSize      int64  `json:"total_size"`
+	TotalChunks    int64  `json:"total_chunks"`
 }
 
-type UploadFileChunkRequest struct{}
+type InitFileUploadResponse struct {
+	FileID    int64 `json:"file_id"`
+	SessionID int64 `json:"session_id"`
+}
+
+type UploadFileChunkRequest struct {
+	SessionID  int64 `json:"session_id"`
+	ChunkIndex int64 `json:"chunk_index"`
+}
