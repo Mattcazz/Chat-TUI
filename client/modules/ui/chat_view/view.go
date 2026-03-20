@@ -3,6 +3,7 @@ package chat_view
 import (
 	"strings"
 
+	"github.com/Mattcazz/Chat-TUI/client/internal/config"
 	"github.com/charmbracelet/lipgloss"
 )
 
@@ -11,12 +12,12 @@ func (m Model) View() string {
 
 	var authorStyle = lipgloss.NewStyle().
 		Bold(true).
-		Foreground(lipgloss.Color("#A32CC4")) // Purple
+		Foreground(lipgloss.Color(config.Configuration.Colors.Username)) // Purple
 
 	var messageStyle = lipgloss.NewStyle().
 		Bold(false).
 		PaddingLeft(2).
-		Foreground(lipgloss.Color("#999999"))
+		Foreground(lipgloss.Color(config.Configuration.Colors.Text))
 	
 	// var timestampStyle = lipgloss.NewStyle().
 	// 	Faint(true).
