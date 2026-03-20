@@ -55,7 +55,8 @@ func LoadConfig() {
 	}
 	data, err := os.ReadFile(jwtFilepath)
 	if err != nil {
-		// TODO
+		// Can't read file
+		panic(err)
 	}
 	Configuration.Jwt = string(data)
 
@@ -71,7 +72,8 @@ func LoadConfig() {
 	}
 	networkConfigFile, err := os.Open(networkConfigFilepath)
 	if err != nil {
-		// TODO
+		// Can't read file
+		panic(err)
 	}
 	json.NewDecoder(networkConfigFile).Decode(&Configuration.Network)
 
@@ -88,7 +90,8 @@ func LoadConfig() {
 	}
 	styleConfigFile, err := os.Open(styleConfigFilepath)
 	if err != nil {
-		// TODO
+		// Can't read file
+		panic(err)
 	}
 	json.NewDecoder(styleConfigFile).Decode(&Configuration.Colors)
 
@@ -104,7 +107,8 @@ func LoadConfig() {
 	}
 	configFile, err := os.Open(configFilepath)
 	if err != nil {
-		// TODO
+		// Can't read file
+		panic(err)
 	}
 	json.NewDecoder(configFile).Decode(&Configuration)
 }

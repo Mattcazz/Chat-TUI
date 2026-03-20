@@ -25,7 +25,7 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 				m.state = types.NeedsUsername
 				m.usernameInput.Reset()
 
-				return m, nil // TODO make this automatically go to next part
+				return m, nil
 			}
 		}
 		logger.Log.Printf("[NORMAL] Got nonce: %s", m.nonce)
@@ -35,12 +35,12 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 		if _, ok := err.(*ssh.PassphraseMissingError); ok {
 			logger.Log.Printf("[NORMAL] Couldn't create signature, private SSH key is encrypted, asking for password")
 			m.state = types.NeedsSSHPassword
-			return m, nil // TODO make this automatically go to next part
+			return m, nil
 		}
 		logger.Log.Printf("[NORMAL] Signature created: %s", m.signature)
 	}
 	logger.Log.Printf("[NORMAL] Attempting to log in...")
-	_, err := m.client.Login(m.pk, m.signature) // TODO get the login response with username
+	_, err := m.client.Login(m.pk, m.signature)
 	if err != nil {
 		log.Panic(err.Error())
 	}
@@ -118,7 +118,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						m.state = types.NeedsUsername // should never happen, since this should trip before ssh password
 						m.usernameInput.Reset() // maybe panic? maybe fatal?
-						// TODO return
+						panic(err)
 					}
 				}
 
@@ -131,6 +131,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					} else {
 						log.Panic(err.Error())
 					}
+					panic(err)
 				}
 
 				m.state = types.Normal

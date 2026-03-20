@@ -104,8 +104,8 @@ func (c *LoginClient) Register(pk []byte, username string) {
 	body, err := io.ReadAll(resp.Body)
 	logger.Log.Printf("Response Body: %s", body)
 	if err != nil {
-		// TODO
 		log.Panic(err.Error())
+		panic(err)
 	}
 	defer resp.Body.Close()
 
