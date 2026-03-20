@@ -21,6 +21,12 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 			logger.Log.Printf("[NORMAL] nonce is nil, requesting challenge...")
 			m.nonce, err = m.client.RequestChallenge(m.pk)
 			if err != nil {
+				if errors.Is(err, errors.ErrUnsupported) {
+					// 400 from server, would be nice to have a better error at some point
+					logger.Log.Printf("[NORMAL] Couldn't get challenge from server, duplicate something or other, check server logs")
+					m.errorMsg = "Something went wrong, please check the server logs"
+					return m, nil
+				}
 				logger.Log.Printf("[NORMAL] Couldn't get challenge from server, user does not exist, opening register state")
 				m.state = types.NeedsUsername
 				m.usernameInput.Reset()
@@ -127,11 +133,15 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if errors.Is(err, x509.IncorrectPasswordError) {
 						// TODO fucking explode idfk, you shouldn't be allowed to not know your password idk
 						// Probably a state for wrong password
-						log.Fatal("imagine not knowing your password holy shit")
+						m.errorMsg = "Incorrect password. Try again."
+						// log.Fatal("imagine not knowing your password holy shit")
+						m.passwordInput.Reset()
+						m.passwordInput, cmd = m.passwordInput.Update(msg)
+						return m, cmd
 					} else {
 						log.Panic(err.Error())
+						panic(err)
 					}
-					panic(err)
 				}
 
 				m.state = types.Normal

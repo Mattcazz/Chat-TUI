@@ -18,7 +18,7 @@ type Model struct {
 	config *config.Config
 
 	state types.LoginModelState
-	err error
+	errorMsg string
 	width int
 	height int
 }
@@ -48,7 +48,6 @@ func NewLoginModel(baseClient *types.BaseClient) Model {
 		client: &types.LoginClient{Client: *baseClient},
 
 		state: types.Normal,
-		err: nil,
 	}
 }
 

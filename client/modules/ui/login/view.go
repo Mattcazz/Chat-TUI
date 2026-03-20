@@ -32,7 +32,15 @@ func (m Model) View() string {
 			"",
 			m.passwordInput.View(),
 		)
+	}
 
+	// append error
+	if len(m.errorMsg) > 0 {
+		content = lipgloss.JoinVertical(
+			lipgloss.Center,
+			content,
+			m.errorMsg,
+		)
 	}
 
 	style := styles.Default.Border

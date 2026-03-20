@@ -60,26 +60,23 @@ func (c *LoginClient) RequestChallenge(pk []byte) ([]byte, error) {
 	logger.Log.Printf("Attempting to request a challenge with:")
 	logger.Log.Printf("\tPublic Key: %s", loginRequest.PublicKey)
 
-	resp, err := c.Client.doRequest("POST", "login", loginRequest, nil)
+	var challengeResponse pkg.ChallengeResponse
+	resp, err := c.Client.doRequest("POST", "login", loginRequest, &challengeResponse)
 	if err != nil {
 		log.Panic(err.Error())
 	}
-
-	body, err := io.ReadAll(resp.Body)
-	logger.Log.Printf("Response Body: %s", body)
-	if err != nil {
-		log.Panic(err.Error())
-	}
-	defer resp.Body.Close()
 
 	switch resp.StatusCode {
 	case http.StatusAccepted:
 		// Nonce coming
-		var challengeResponse pkg.ChallengeResponse
-		json.Unmarshal(body, &challengeResponse)
 		logger.Log.Printf("Challenge nonce received: %s", challengeResponse.Nonce)
 
 		return []byte(challengeResponse.Nonce), nil
+	case http.StatusBadRequest:
+		// Internal server error (only real case I've found so far is duplicate key)
+		// Not sure why this happens, for now return a specific error and log it
+		logger.Log.Print("Got 400 error from server")
+		return nil, errors.ErrUnsupported
 	default:
 		return nil, errors.New("Received an unsupported response status: " + resp.Status);
 	}

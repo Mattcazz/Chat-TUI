@@ -41,7 +41,7 @@ func createSignature(nonce string, sk []byte, passphrase []byte) ([]byte, error)
 			}
 			signer, err = ssh.ParsePrivateKeyWithPassphrase(sk, passphrase)
 			if err != nil {
-				panic(err) // probably wrong password
+				return nil, err
 			}
 		} else {
 			panic(err)
