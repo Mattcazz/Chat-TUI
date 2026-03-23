@@ -30,7 +30,14 @@ func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileU
 		CreatedAt:      time.Now(),
 	}
 
-	if err := s.fileRepo.CreateFile(ctx, file); err != nil {
+	tx, err := s.tx.StartTx(ctx)
+	if err != nil {
+		return nil, err
+	}
+
+	defer s.tx.RollBack(tx)
+
+	if err := s.fileRepo.WithTx(tx).CreateFile(ctx, file); err != nil {
 		return nil, err
 	}
 
@@ -41,13 +48,17 @@ func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileU
 		ExpiresAt:   time.Now().Add(time.Duration(TimeToExpireUploadSession) * time.Second),
 	}
 
-	if err := s.fileRepo.InitUploadSession(ctx, uploadSession); err != nil {
+	if err := s.fileRepo.WithTx(tx).InitUploadSession(ctx, uploadSession); err != nil {
 		return nil, err
 	}
 
 	resp := &pkg.InitFileUploadResponse{
 		SessionID: uploadSession.ID,
 		FileID:    file.ID,
+	}
+
+	if err := s.tx.Commit(tx); err != nil {
+		return nil, err
 	}
 
 	return resp, nil

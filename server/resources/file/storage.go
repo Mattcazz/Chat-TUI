@@ -2,6 +2,7 @@ package file
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/Mattcazz/Chat-TUI/server/db"
 )
@@ -13,6 +14,12 @@ type FileStore struct {
 func NewFileStore(db db.DBTX) *FileStore {
 	return &FileStore{
 		db: db,
+	}
+}
+
+func (s *FileStore) WithTx(tx *sql.Tx) *FileStore {
+	return &FileStore{
+		db: tx,
 	}
 }
 

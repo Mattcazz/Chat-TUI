@@ -2,10 +2,12 @@ package file
 
 import (
 	"context"
+	"database/sql"
 	"time"
 )
 
 type FileRepository interface {
+	WithTx(tx *sql.Tx) FileRepository
 	CreateFile(ctx context.Context, file *File) error
 	DeleteFile(ctx context.Context, fileID int64) error
 	InitUploadSession(ctx context.Context, uploadSession *UploadSession) error
