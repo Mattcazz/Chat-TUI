@@ -38,6 +38,19 @@ func (s *FileStore) DeleteFile(ctx context.Context, fileID int64) error {
 	return err
 }
 
+func (s *FileStore) GetUploadSession(ctx context.Context, sessionID int64) (*UploadSession, error) {
+	query := `SELECT id, file_id, total_chunks, status, expired_at FROM upload_sessions WHERE id = $1`
+	row := s.db.QueryRowContext(ctx, query, sessionID)
+
+	var session UploadSession
+	err := row.Scan(&session.ID, &session.FileID, &session.TotalChunks, &session.Status, &session.ExpiresAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
 func (s *FileStore) InitUploadSession(ctx context.Context, uploadSession *UploadSession) error {
 	query := `INSERT INTO upload_sessions (file_id, total_chunks, status, expired_at) 
 						VALUES ($1, $2, $3, $4) 
@@ -73,4 +86,20 @@ func (s *FileStore) GetChunksCountForSession(ctx context.Context, sessionID int6
 	var count int64
 	err := s.db.QueryRowContext(ctx, query, sessionID).Scan(&count)
 	return count, err
+}
+
+func (s *FileStore) UpdateFileStatus(ctx context.Context, fileID int64, status FileStatus) error {
+	query := `UPDATE files SET status = $1 WHERE id = $2`
+
+	_, err := s.db.ExecContext(ctx, query, status, fileID)
+
+	return err
+}
+
+func (s *FileStore) UpdateUploadSessionStatus(ctx context.Context, sessionID int64, status UploadSessionStatus) error {
+	query := `UPDATE upload_sessions SET status = $1 WHERE id = $2`
+
+	_, err := s.db.ExecContext(ctx, query, status, sessionID)
+
+	return err
 }

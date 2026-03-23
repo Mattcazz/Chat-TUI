@@ -99,6 +99,7 @@ type InitFileUploadResponse struct {
 }
 
 type UploadFileChunkRequest struct {
-	SessionID  int64 `json:"session_id"`
-	ChunkIndex int64 `json:"chunk_index"`
+	SessionID  int64  `json:"session_id"`
+	ChunkIndex int64  `json:"chunk_index"`
+	ChunkData  []byte `json:"chunk_data"`
 }

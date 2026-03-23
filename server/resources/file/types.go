@@ -15,6 +15,9 @@ type FileRepository interface {
 	InsertFileChunk(ctx context.Context, fileChunk *FileChunk) error
 	DeleteFileChunksFromUploadSession(ctx context.Context, sessionID int64) error
 	GetChunksCountForSession(ctx context.Context, sessionID int64) (int64, error)
+	UpdateFileStatus(ctx context.Context, fileID int64, status FileStatus) error
+	UpdateUploadSessionStatus(ctx context.Context, sessionID int64, status UploadSessionStatus) error
+	GetUploadSession(ctx context.Context, sessionID int64) (*UploadSession, error)
 }
 
 type File struct {
