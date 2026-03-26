@@ -13,7 +13,7 @@ type InboxClient struct {
 }
 
 func (c *InboxClient) GetInbox() (pkg.InboxResponse, error) {
-	logger.Log.Printf("Getting inbox...")
+	logger.Log.Printf("Getting inbox")
 
 	var inboxResponse pkg.InboxResponse
 	resp, err := c.Client.doRequest("GET", "inbox", nil, &inboxResponse)

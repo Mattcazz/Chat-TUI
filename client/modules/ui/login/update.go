@@ -14,11 +14,12 @@ import (
 )
 
 func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
+	logger.Log.Printf("[NORMAL] Attempting log in")
 	if m.signature == nil {
-		logger.Log.Printf("[NORMAL] Requesting Challenge from server...")
+		logger.Log.Printf("[NORMAL] Requesting Challenge from server")
 		var err error
 		if m.nonce == nil {
-			logger.Log.Printf("[NORMAL] nonce is nil, requesting challenge...")
+			logger.Log.Printf("[NORMAL] nonce is nil, requesting challenge")
 			m.nonce, err = m.client.RequestChallenge(m.pk)
 			if err != nil {
 				if errors.Is(err, errors.ErrUnsupported) {
@@ -36,7 +37,7 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 		}
 		logger.Log.Printf("[NORMAL] Got nonce: %s", m.nonce)
 
-		logger.Log.Printf("[NORMAL] Creating signature...")
+		logger.Log.Printf("[NORMAL] Creating signature")
 		m.signature, err = createSignature(string(m.nonce), m.sk, nil)
 		if _, ok := err.(*ssh.PassphraseMissingError); ok {
 			logger.Log.Printf("[NORMAL] Couldn't create signature, private SSH key is encrypted, asking for password")
@@ -45,7 +46,7 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 		}
 		logger.Log.Printf("[NORMAL] Signature created: %s", m.signature)
 	}
-	logger.Log.Printf("[NORMAL] Attempting to log in...")
+	logger.Log.Printf("[NORMAL] Attempting to log in")
 	_, err := m.client.Login(m.pk, m.signature)
 	if err != nil {
 		log.Panic(err.Error())
@@ -75,11 +76,11 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case commands.LoadSSHKeysMsg:
-		logger.Log.Printf("Loading ssh keys...")
+		logger.Log.Printf("Loading ssh keys")
 		m.pk, m.sk = getSSHKeys() // TODO Let user pick at some point
 		return m, commands.NewDoLoginCmd()
 	case commands.DoLogInMsg:
-		logger.Log.Printf("Attempting log in...")
+		logger.Log.Printf("Attempting log in")
 
 		return m.doLoginCmd()
 	}
@@ -98,7 +99,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				logger.Log.Printf("[USERNAME] Attempting to register with username: %s", m.usernameInput.Value())
 				m.client.Register(m.pk, m.usernameInput.Value())
 
-				logger.Log.Printf("[USERNAME] Successfully registered, returning to NORMAL mode...")
+				logger.Log.Printf("[USERNAME] Successfully registered, returning to NORMAL mode")
 				m.signature = nil
 				m.state = types.Normal
 
@@ -119,7 +120,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 				// use password idfk man
 				var err error
 				if m.nonce == nil {
-					logger.Log.Printf("[SSH] nonce is nil, requesting challenge...")
+					logger.Log.Printf("[SSH] nonce is nil, requesting challenge")
 					m.nonce, err = m.client.RequestChallenge(m.pk)
 					if err != nil {
 						m.state = types.NeedsUsername // should never happen, since this should trip before ssh password

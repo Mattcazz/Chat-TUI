@@ -68,11 +68,10 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		return m, nil
 	case commands.LogInMsg:
 		logger.Log.Printf("[APP] Successfully logged in")
-		logger.Log.Printf("[APP] Switching to inbox view...")
+		logger.Log.Printf("[APP] Switching to inbox view")
 		m.state = types.InboxView
-		m.inboxModel, cmd = m.inboxModel.Update(commands.NewUpdateInboxCmd())
 
-		return m, cmd
+		return m, commands.NewUpdateInboxCmd()
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
@@ -83,7 +82,7 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		msg.Height -= lipgloss.NormalBorder().GetBottomSize()
 
 		m.loginModel, _ = m.loginModel.Update(msg)
-		m.loginModel, _ = m.inboxModel.Update(msg)
+		m.inboxModel, _ = m.inboxModel.Update(msg)
 		m.chatModel, _ = m.chatModel.Update(msg)
 
 		return m, nil
