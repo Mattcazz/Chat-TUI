@@ -10,3 +10,8 @@ $(NAME): $(SRCS)
 
 run: $(NAME)
 	./$(NAME)
+
+update:
+	go mod tidy
+
+.PHONY: run update
