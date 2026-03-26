@@ -7,7 +7,7 @@ import (
 )
 
 type FileRepository interface {
-	WithTx(tx *sql.Tx) FileRepository
+	WithTx(tx *sql.Tx) *FileStore
 	CreateFile(ctx context.Context, file *File) error
 	DeleteFile(ctx context.Context, fileID int64) error
 	InitUploadSession(ctx context.Context, uploadSession *UploadSession) error
@@ -19,7 +19,6 @@ type FileRepository interface {
 	UpdateUploadSessionStatus(ctx context.Context, sessionID int64, status UploadSessionStatus) error
 	GetUploadSession(ctx context.Context, sessionID int64) (*UploadSession, error)
 }
-
 type File struct {
 	ID             int64      `json:"id"`
 	FileName       string     `json:"file_name"`
