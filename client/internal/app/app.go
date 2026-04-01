@@ -70,8 +70,9 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		logger.Log.Printf("[APP] Successfully logged in")
 		logger.Log.Printf("[APP] Switching to inbox view")
 		m.state = types.InboxView
+		m.inboxModel, cmd = m.inboxModel.Update(commands.UpdateInboxMsg{})
 
-		return m, commands.NewUpdateInboxCmd()
+		return m, cmd
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height

@@ -4,6 +4,7 @@ import (
 	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
 	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
 	"github.com/Mattcazz/Chat-TUI/client/internal/user"
+	"github.com/Mattcazz/Chat-TUI/client/styles"
 	"github.com/Mattcazz/Chat-TUI/client/types"
 	"github.com/Mattcazz/Chat-TUI/pkg"
 	"github.com/charmbracelet/bubbles/list"
@@ -11,34 +12,31 @@ import (
 )
 
 func getConversationItemList(conversations []pkg.InboxConversationResponse) []list.Item {
-	conversationList := make([]types.InboxConversation, len(conversations))
+	itemList := make([]list.Item, 0, len(conversations))
 
 	for _, conversation := range conversations {
-		var conversationItem types.InboxConversation
-		conversationItem.UserName = conversation.UserName
-		conversationItem.ID = conversation.ID
-		conversationItem.LastMsg = conversation.LastMsg
-		conversationItem.LastMsgAt = conversation.LastMsgAt
-
-		conversationList = append(conversationList, conversationItem)
+		itemList = append(itemList, &types.InboxConversation{
+			UserName: conversation.UserName,
+			ID: conversation.ID,
+			LastMsg: conversation.LastMsg,
+			LastMsgAt: conversation.LastMsgAt,
+		})
+		logger.Log.Printf("New conversation with %s logged", conversation.UserName)
 	}
-
-	// Convert to Item list
-	itemList := make([]list.Item, len(conversationList))
-	for i, _ := range conversationList {
-		itemList[i] = &conversationList[i]
-	}
+	logger.Log.Printf("Got %d conversations", len(itemList))
 
 	return itemList
 }
 
-func (m Model) updateConversationList() tea.Cmd {
+func (m *Model) updateConversationList() tea.Cmd {
+	logger.Log.Println("[INBOX] Updating conversation list")
 	inboxResponse, err := m.client.GetInbox()
 	if err != nil {
 		logger.Log.Panicln("Failed to get inbox: " + err.Error())
 	}
 
 	conversationItemList := getConversationItemList(inboxResponse.Conversations)
+	logger.Log.Printf("Ended up with %d conversations", len(conversationItemList))
 	cmd := m.conversationList.SetItems(conversationItemList)
 
 	// Now we update "global" vars
@@ -59,6 +57,9 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.WindowSizeMsg:
 		m.width = msg.Width
 		m.height = msg.Height
+		conversationListWidth := m.width - styles.Default.Border.GetHorizontalFrameSize()
+		conversationListHeight := m.height - styles.Default.Border.GetVerticalFrameSize() - 1 // TODO -1 is for "Inbox" title, replace with its own model
+		m.conversationList.SetSize(conversationListWidth, conversationListHeight)
 
 		return m, nil
 	case tea.KeyMsg:
