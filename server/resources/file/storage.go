@@ -51,11 +51,20 @@ func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
 
 func (s *FileStore) CreateFile(ctx context.Context, file *File) error {
 	log.Printf("FileStore.CreateFile: Creating file with name %s, size %d bytes, conversation ID %d", file.FileName, file.Size, file.ConversationID)
-	query := `INSERT INTO files (file_name, extension, conversation_id, uploader_id, size, status, checksum, created_at) 
-						VALUES ($1, $2, $3, $4, $5, $6, $7, $8) 
+	query := `INSERT INTO files (name, extension, conversation_id, uploader_id, size, status, checksum, storage_path,created_at) 
+						VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9) 
 						RETURNING id`
 
-	err := s.db.QueryRowContext(ctx, query, file.FileName, file.Extension, file.ConversationID, file.UploaderID, file.Size, file.Status, file.Checksum, file.CreatedAt).Scan(&file.ID)
+	err := s.db.QueryRowContext(ctx, query,
+		file.FileName,
+		file.Extension,
+		file.ConversationID,
+		file.UploaderID,
+		file.Size,
+		file.Status,
+		file.Checksum,
+		file.StoragePath,
+		file.CreatedAt).Scan(&file.ID)
 	if err != nil {
 		log.Printf("FileStore.CreateFile: Failed to create file %s: %v", file.FileName, err)
 		return err
@@ -80,7 +89,7 @@ func (s *FileStore) DeleteFile(ctx context.Context, fileID int64) error {
 
 func (s *FileStore) GetUploadSession(ctx context.Context, sessionID int64) (*UploadSession, error) {
 	log.Printf("FileStore.GetUploadSession: Retrieving upload session with ID %d", sessionID)
-	query := `SELECT id, file_id, total_chunks, status, expired_at FROM upload_sessions WHERE id = $1`
+	query := `SELECT id, file_id, total_chunks, status, expires_at FROM upload_sessions WHERE id = $1`
 	row := s.db.QueryRowContext(ctx, query, sessionID)
 
 	var session UploadSession
@@ -96,7 +105,7 @@ func (s *FileStore) GetUploadSession(ctx context.Context, sessionID int64) (*Upl
 
 func (s *FileStore) InitUploadSession(ctx context.Context, uploadSession *UploadSession) error {
 	log.Printf("FileStore.InitUploadSession: Creating upload session for file ID %d with %d total chunks", uploadSession.FileID, uploadSession.TotalChunks)
-	query := `INSERT INTO upload_sessions (file_id, total_chunks, status, expired_at) 
+	query := `INSERT INTO upload_sessions (file_id, total_chunks, status, expires_at) 
 						VALUES ($1, $2, $3, $4) 
 						RETURNING id`
 
@@ -125,7 +134,7 @@ func (s *FileStore) DeleteUploadSession(ctx context.Context, sessionID int64) er
 
 func (s *FileStore) InsertFileChunk(ctx context.Context, fileChunk *FileChunk) error {
 	log.Printf("FileStore.InsertFileChunk: Inserting chunk %d for session ID %d", fileChunk.Index, fileChunk.SessionID)
-	query := `INSERT INTO file_chunks (index, session_id, created_at, checksum) 
+	query := `INSERT INTO uploaded_chunks (chunk_index, upload_session_id, created_at, checksum) 
 						VALUES ($1, $2, $3, $4) 
 						RETURNING id`
 
@@ -141,7 +150,7 @@ func (s *FileStore) InsertFileChunk(ctx context.Context, fileChunk *FileChunk) e
 
 func (s *FileStore) DeleteFileChunksFromUploadSession(ctx context.Context, sessionID int64) error {
 	log.Printf("FileStore.DeleteFileChunksFromUploadSession: Deleting chunks for session ID %d", sessionID)
-	query := `DELETE FROM file_chunks WHERE session_id = $1`
+	query := `DELETE FROM uploaded_chunks WHERE session_id = $1`
 	_, err := s.db.ExecContext(ctx, query, sessionID)
 	if err != nil {
 		log.Printf("FileStore.DeleteFileChunksFromUploadSession: Failed to delete chunks for session %d: %v", sessionID, err)
@@ -154,7 +163,7 @@ func (s *FileStore) DeleteFileChunksFromUploadSession(ctx context.Context, sessi
 
 func (s *FileStore) GetChunksCountForSession(ctx context.Context, sessionID int64) (int64, error) {
 	log.Printf("FileStore.GetChunksCountForSession: Counting chunks for session ID %d", sessionID)
-	query := `SELECT COUNT(*) FROM file_chunks WHERE session_id = $1`
+	query := `SELECT COUNT(*) FROM uploaded_chunks WHERE session_id = $1`
 	var count int64
 	err := s.db.QueryRowContext(ctx, query, sessionID).Scan(&count)
 	if err != nil {
@@ -166,11 +175,11 @@ func (s *FileStore) GetChunksCountForSession(ctx context.Context, sessionID int6
 	return count, nil
 }
 
-func (s *FileStore) UpdateFileStatus(ctx context.Context, fileID int64, status FileStatus) error {
+func (s *FileStore) UpdateFileStatusAndPath(ctx context.Context, fileID int64, status FileStatus, finalPath string) error {
 	log.Printf("FileStore.UpdateFileStatus: Updating file ID %d status to %s", fileID, status)
-	query := `UPDATE files SET status = $1 WHERE id = $2`
+	query := `UPDATE files SET status = $1, storage_path = $2 WHERE id = $3`
 
-	_, err := s.db.ExecContext(ctx, query, status, fileID)
+	_, err := s.db.ExecContext(ctx, query, status, finalPath, fileID)
 	if err != nil {
 		log.Printf("FileStore.UpdateFileStatus: Failed to update file ID %d status: %v", fileID, err)
 		return err

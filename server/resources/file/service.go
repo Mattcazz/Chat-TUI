@@ -42,6 +42,7 @@ func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileU
 		Size:           initFileReq.TotalSize,
 		Checksum:       initFileReq.Checksum,
 		Status:         FileStatusUploading,
+		StoragePath:    "", // will be set upon finalization
 		CreatedAt:      time.Now(),
 	}
 
@@ -128,12 +129,13 @@ func (s *Service) UploadFileChunk(ctx context.Context, sessionID int64, uploadCh
 	}
 
 	if n != len(uploadChunkReq.ChunkData) {
-		log.Printf("Service.UploadFileChunk: Partial write detected - expected %d bytes, wrote %d bytes", len(uploadChunkReq.ChunkData), n)
+		os.Remove(path)
 		return fmt.Errorf("failed to write the entire chunk data to file, expected %d bytes but wrote %d bytes", len(uploadChunkReq.ChunkData), n)
 	}
 
 	log.Printf("Service.UploadFileChunk: Inserting chunk record into database")
 	if err := s.fileRepo.InsertFileChunk(ctx, fileChunk); err != nil {
+		os.Remove(path)
 		log.Printf("Service.UploadFileChunk: Failed to insert chunk record: %v", err)
 		return err
 	}
@@ -158,7 +160,6 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 	log.Printf("Service.FinalizeFileUpload: Session retrieved with status: %s", session.Status)
 
 	if session.Status != FileSessionStatusUploading {
-		log.Printf("Service.FinalizeFileUpload: Invalid session status %s for finalization", session.Status)
 		return fmt.Errorf("cannot finalize upload session with status %s", session.Status)
 	}
 
@@ -202,13 +203,11 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 
 	log.Printf("Service.FinalizeFileUpload: Starting file assembly from %d chunks", session.TotalChunks)
 	if err := assembleFile(finalFile, finalPath, file, session); err != nil {
-		log.Printf("Service.FinalizeFileUpload: File assembly failed: %v", err)
 		return err
 	}
 
 	log.Printf("Service.FinalizeFileUpload: File assembled successfully, starting database finalization")
-	if err := s.finalizeFileUploadOnDB(ctx, session); err != nil {
-		log.Printf("Service.FinalizeFileUpload: Database finalization failed: %v", err)
+	if err := s.finalizeFileUploadOnDB(ctx, session, finalPath); err != nil {
 		return err
 	}
 
@@ -216,7 +215,6 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 	log.Printf("Service.FinalizeFileUpload: Cleaning up temporary directory: %s", sessionDir)
 	err = os.RemoveAll(sessionDir)
 	if err != nil {
-		log.Printf("Service.FinalizeFileUpload: Failed to remove temporary directory: %v", err)
 		return fmt.Errorf("failed to remove temporary upload session directory: %w", err)
 	}
 
@@ -233,45 +231,34 @@ func assembleFile(finalFile *os.File, finalPath string, file *File, session *Upl
 
 		chunk, err := os.Open(chunkPath)
 		if err != nil {
-			log.Printf("assembleFile: Failed to open chunk %d: %v", i, err)
 			return err
 		}
 
 		if _, err := io.Copy(finalFile, chunk); err != nil {
 			chunk.Close()
-			log.Printf("assembleFile: Failed to copy chunk %d to final file: %v", i, err)
 			return err
 		}
 		chunk.Close()
-
-		// Log progress every 10 chunks to avoid log spam
-		if (i+1)%10 == 0 || i == session.TotalChunks-1 {
-			log.Printf("assembleFile: Assembled %d/%d chunks", i+1, session.TotalChunks)
-		}
 	}
 
 	fileInfo, err := finalFile.Stat()
 	if err != nil {
-		log.Printf("assembleFile: Failed to get file info: %v", err)
 		return err
 	}
 
 	log.Printf("assembleFile: Validating file size - actual: %d bytes, expected: %d bytes", fileInfo.Size(), file.Size)
 
 	if fileInfo.Size() != file.Size {
-		log.Printf("assembleFile: File size mismatch for session %d", session.ID)
 		return fmt.Errorf("final assembled file size %d does not match expected file size %d", fileInfo.Size(), file.Size)
 	}
 
 	log.Printf("assembleFile: Calculating and validating file checksum")
 	checkSum, err := pkg.CalculateFileChecksum(finalPath)
 	if err != nil {
-		log.Printf("assembleFile: Failed to calculate file checksum: %v", err)
 		return err
 	}
 
 	if checkSum != file.Checksum {
-		log.Printf("assembleFile: Checksum validation failed for session %d", session.ID)
 		return fmt.Errorf("final assembled file checksum does not match expected file checksum")
 	}
 
@@ -279,13 +266,12 @@ func assembleFile(finalFile *os.File, finalPath string, file *File, session *Upl
 	return nil
 }
 
-func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSession) error {
+func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSession, finalPath string) error {
 	log.Printf("Service.finalizeFileUploadOnDB: Starting database finalization for session ID %d, file ID %d",
 		session.ID, session.FileID)
 
 	tx, err := s.tx.StartTx(ctx)
 	if err != nil {
-		log.Printf("Service.finalizeFileUploadOnDB: Failed to start transaction: %v", err)
 		return err
 	}
 
@@ -293,25 +279,21 @@ func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSes
 
 	log.Printf("Service.finalizeFileUploadOnDB: Deleting chunk records for session %d", session.ID)
 	if err := s.fileRepo.WithTx(tx).DeleteFileChunksFromUploadSession(ctx, session.ID); err != nil {
-		log.Printf("Service.finalizeFileUploadOnDB: Failed to delete chunk records: %v", err)
 		return err
 	}
 
 	log.Printf("Service.finalizeFileUploadOnDB: Updating file ID %d status to ready", session.FileID)
-	if err := s.fileRepo.WithTx(tx).UpdateFileStatus(ctx, session.FileID, FileStatusReady); err != nil {
-		log.Printf("Service.finalizeFileUploadOnDB: Failed to update file status: %v", err)
+	if err := s.fileRepo.WithTx(tx).UpdateFileStatusAndPath(ctx, session.FileID, FileStatusReady, finalPath); err != nil {
 		return err
 	}
 
 	log.Printf("Service.finalizeFileUploadOnDB: Updating session ID %d status to completed", session.ID)
 	if err := s.fileRepo.WithTx(tx).UpdateUploadSessionStatus(ctx, session.ID, FileSessionStatusCompleted); err != nil {
-		log.Printf("Service.finalizeFileUploadOnDB: Failed to update session status: %v", err)
 		return err
 	}
 
 	log.Printf("Service.finalizeFileUploadOnDB: Committing transaction")
 	if err := s.tx.Commit(tx); err != nil {
-		log.Printf("Service.finalizeFileUploadOnDB: Failed to commit transaction: %v", err)
 		return err
 	}
 
