@@ -25,8 +25,13 @@ func NewService(fr FileRepository, tx *db.TxManager) *Service {
 }
 
 func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileUploadRequest) (*pkg.InitFileUploadResponse, error) {
+	fileName := SanitizeFileName(initFileReq.FileName)
+
+	fileExtenstion := GetFileExtension(fileName)
+
 	file := &File{
-		FileName:       initFileReq.FileName,
+		FileName:       fileName,
+		Extension:      fileExtenstion,
 		ConversationID: initFileReq.ConversationID,
 		Size:           initFileReq.TotalSize,
 		Checksum:       initFileReq.Checksum,
@@ -143,8 +148,26 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 		}
 	}()
 
+	if err := assembleFile(finalFile, finalPath, file, session); err != nil {
+		return err
+	}
+
+	if err := s.finalizeFileUploadOnDB(ctx, session); err != nil {
+		return err
+	}
+
+	sessionDir := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d", sessionID))
+	err = os.RemoveAll(sessionDir)
+	if err != nil {
+		return fmt.Errorf("failed to remove temporary upload session directory: %w", err)
+	}
+
+	return nil
+}
+
+func assembleFile(finalFile *os.File, finalPath string, file *File, session *UploadSession) error {
 	for i := int64(0); i < session.TotalChunks; i++ {
-		chunkPath := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d/chunk-%d.bin", sessionID, i))
+		chunkPath := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d/chunk-%d.bin", session.ID, i))
 
 		chunk, err := os.Open(chunkPath)
 		if err != nil {
@@ -176,13 +199,17 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 		return fmt.Errorf("final assembled file checksum does not match expected file checksum")
 	}
 
+	return nil
+}
+
+func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSession) error {
 	tx, err := s.tx.StartTx(ctx)
 	if err != nil {
 		return err
 	}
 
 	defer s.tx.RollBack(tx)
-	if err := s.fileRepo.WithTx(tx).DeleteFileChunksFromUploadSession(ctx, sessionID); err != nil {
+	if err := s.fileRepo.WithTx(tx).DeleteFileChunksFromUploadSession(ctx, session.ID); err != nil {
 		return err
 	}
 
@@ -190,18 +217,12 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 		return err
 	}
 
-	if err := s.fileRepo.WithTx(tx).UpdateUploadSessionStatus(ctx, sessionID, FileSessionStatusCompleted); err != nil {
+	if err := s.fileRepo.WithTx(tx).UpdateUploadSessionStatus(ctx, session.ID, FileSessionStatusCompleted); err != nil {
 		return err
 	}
 
 	if err := s.tx.Commit(tx); err != nil {
 		return err
-	}
-
-	sessionDir := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d", sessionID))
-	err = os.RemoveAll(sessionDir)
-	if err != nil {
-		return fmt.Errorf("failed to remove temporary upload session directory: %w", err)
 	}
 
 	return nil

@@ -23,6 +23,15 @@ func (s *FileStore) WithTx(tx *sql.Tx) *FileStore {
 	}
 }
 
+func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
+	query := `SELECT id, file_name, extension, conversation_id, size, status, checksum, created_at FROM files WHERE id = $1`
+
+	var file *File
+	err := s.db.QueryRowContext(ctx, query, fileID).Scan(file)
+
+	return file, err
+}
+
 func (s *FileStore) CreateFile(ctx context.Context, file *File) error {
 	query := `INSERT INTO files (file_name, conversation_id, size, status, checksum, created_at) 
 						VALUES ($1, $2, $3, $4, $5, $6) 
