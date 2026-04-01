@@ -29,7 +29,7 @@ func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileU
 		FileName:       initFileReq.FileName,
 		ConversationID: initFileReq.ConversationID,
 		Size:           initFileReq.TotalSize,
-		Checksum:       "", // TODO: what to do here? client should send checksum of the file or we calculate it on the server after receiving all chunks?
+		Checksum:       initFileReq.Checksum,
 		Status:         FileStatusUploading,
 		CreatedAt:      time.Now(),
 	}
@@ -52,13 +52,13 @@ func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileU
 		ExpiresAt:   time.Now().Add(time.Duration(TimeToExpireUploadSession) * time.Second),
 	}
 
-	dir := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d", uploadSession.ID))
-	err = os.MkdirAll(dir, os.ModePerm)
-	if err != nil {
+	if err := s.fileRepo.WithTx(tx).InitUploadSession(ctx, uploadSession); err != nil {
 		return nil, err
 	}
 
-	if err := s.fileRepo.WithTx(tx).InitUploadSession(ctx, uploadSession); err != nil {
+	dir := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d", uploadSession.ID))
+	err = os.MkdirAll(dir, os.ModePerm)
+	if err != nil {
 		return nil, err
 	}
 
@@ -80,7 +80,7 @@ func (s *Service) UploadFileChunk(ctx context.Context, uploadChunkReq *pkg.Uploa
 		Index:     uploadChunkReq.ChunkIndex,
 		SessionID: uploadChunkReq.SessionID,
 		CreatedAt: time.Now(),
-		Checksum:  "", // TODO: same as above, client should send checksum of the chunk or we calculate it on the server after receiving the chunk?
+		Checksum:  uploadChunkReq.Checksum,
 	}
 
 	path := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d/chunk-%d.bin", uploadChunkReq.SessionID, uploadChunkReq.ChunkIndex))
@@ -125,7 +125,13 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 		return fmt.Errorf("cannot finalize upload session because the number of uploaded chunks %d does not match the expected total chunks %d", chunksCount, session.TotalChunks)
 	}
 
-	finalPath := filepath.Join(string(FinalUploadsPath), fmt.Sprintf("file-%d.bin", session.FileID))
+	file, err := s.fileRepo.GetFile(ctx, session.FileID)
+	if err != nil {
+		return err
+	}
+
+	filename := fmt.Sprintf("file-%d%s", session.FileID, file.Extension)
+	finalPath := filepath.Join(string(FinalUploadsPath), filename)
 	finalFile, err := os.Create(finalPath)
 	if err != nil {
 		return err
@@ -150,6 +156,24 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 			return err
 		}
 		chunk.Close()
+	}
+
+	fileInfo, err := finalFile.Stat()
+	if err != nil {
+		return err
+	}
+
+	if fileInfo.Size() != file.Size {
+		return fmt.Errorf("final assembled file size %d does not match expected file size %d", fileInfo.Size(), file.Size)
+	}
+
+	checkSum, err := pkg.CalculateFileChecksum(finalPath)
+	if err != nil {
+		return err
+	}
+
+	if checkSum != file.Checksum {
+		return fmt.Errorf("final assembled file checksum does not match expected file checksum")
 	}
 
 	tx, err := s.tx.StartTx(ctx)

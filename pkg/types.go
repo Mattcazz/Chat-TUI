@@ -91,6 +91,7 @@ type InitFileUploadRequest struct {
 	FileName       string `json:"file_name"`
 	TotalSize      int64  `json:"total_size"`
 	TotalChunks    int64  `json:"total_chunks"`
+	Checksum       string `json:"checksum"`
 }
 
 type InitFileUploadResponse struct {
@@ -102,4 +103,5 @@ type UploadFileChunkRequest struct {
 	SessionID  int64  `json:"session_id"`
 	ChunkIndex int64  `json:"chunk_index"`
 	ChunkData  []byte `json:"chunk_data"`
+	Checksum   string `json:"checksum"`
 }
