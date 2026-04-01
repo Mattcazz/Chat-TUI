@@ -24,7 +24,7 @@ func (s *FileStore) WithTx(tx *sql.Tx) *FileStore {
 }
 
 func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
-	query := `SELECT id, file_name, extension, conversation_id, size, status, checksum, created_at FROM files WHERE id = $1`
+	query := `SELECT * FROM files WHERE id = $1`
 
 	var file *File
 	err := s.db.QueryRowContext(ctx, query, fileID).Scan(file)
@@ -33,11 +33,11 @@ func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
 }
 
 func (s *FileStore) CreateFile(ctx context.Context, file *File) error {
-	query := `INSERT INTO files (file_name, conversation_id, size, status, checksum, created_at) 
-						VALUES ($1, $2, $3, $4, $5, $6) 
+	query := `INSERT INTO files (file_name, conversation_id, uploader_id, size, status, checksum, created_at) 
+						VALUES ($1, $2, $3, $4, $5, $6, $7) 
 						RETURNING id`
 
-	err := s.db.QueryRowContext(ctx, query, file.FileName, file.ConversationID, file.Size, file.Status, file.Checksum, file.CreatedAt).Scan(&file.ID)
+	err := s.db.QueryRowContext(ctx, query, file.FileName, file.ConversationID, file.UploaderID, file.Size, file.Status, file.Checksum, file.CreatedAt).Scan(&file.ID)
 	return err
 }
 

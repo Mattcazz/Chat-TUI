@@ -80,7 +80,7 @@ func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileU
 	return resp, nil
 }
 
-func (s *Service) UploadFileChunk(ctx context.Context, uploadChunkReq *pkg.UploadFileChunkRequest) error {
+func (s *Service) UploadFileChunk(ctx context.Context, sessionID int64, uploadChunkReq *pkg.UploadFileChunkRequest) error {
 	fileChunk := &FileChunk{
 		Index:     uploadChunkReq.ChunkIndex,
 		SessionID: uploadChunkReq.SessionID,
@@ -88,7 +88,7 @@ func (s *Service) UploadFileChunk(ctx context.Context, uploadChunkReq *pkg.Uploa
 		Checksum:  uploadChunkReq.Checksum,
 	}
 
-	path := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d/chunk-%d.bin", uploadChunkReq.SessionID, uploadChunkReq.ChunkIndex))
+	path := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d/chunk-%d.bin", sessionID, uploadChunkReq.ChunkIndex))
 
 	createdFile, err := os.Create(path)
 	if err != nil {

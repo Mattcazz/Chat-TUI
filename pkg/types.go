@@ -88,6 +88,7 @@ type ConversationResponse struct {
 
 type InitFileUploadRequest struct {
 	ConversationID int64  `json:"conversation_id"`
+	UploaderID     int64  `json:"uploader_id"`
 	FileName       string `json:"file_name"`
 	TotalSize      int64  `json:"total_size"`
 	TotalChunks    int64  `json:"total_chunks"`
@@ -100,7 +101,6 @@ type InitFileUploadResponse struct {
 }
 
 type UploadFileChunkRequest struct {
-	SessionID  int64  `json:"session_id"`
 	ChunkIndex int64  `json:"chunk_index"`
 	ChunkData  []byte `json:"chunk_data"`
 	Checksum   string `json:"checksum"`

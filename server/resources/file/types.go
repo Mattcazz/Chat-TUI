@@ -25,6 +25,7 @@ type File struct {
 	FileName       string     `json:"file_name"`
 	Extension      string     `json:"extension"`
 	ConversationID int64      `json:"conversation_id"`
+	UploaderID     int64      `json:"uploader_id"`
 	Size           int64      `json:"size"`
 	Status         FileStatus `json:"status"`
 	Checksum       string     `json:"checksum"`
