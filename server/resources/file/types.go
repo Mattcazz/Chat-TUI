@@ -45,6 +45,7 @@ type FileChunk struct {
 	ID        int64     `json:"id"`
 	Index     int64     `json:"index"`
 	SessionID int64     `json:"session_id"`
+	Size      int64     `json:"size"`
 	CreatedAt time.Time `json:"created_at"`
 	Checksum  string    `json:"checksum"`
 }

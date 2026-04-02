@@ -26,7 +26,7 @@ func (s *FileStore) WithTx(tx *sql.Tx) *FileStore {
 
 func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
 	log.Printf("FileStore.GetFile: Retrieving file with ID %d", fileID)
-	query := `SELECT id, file_name, extension, conversation_id, uploader_id, size, status, checksum, created_at FROM files WHERE id = $1`
+	query := `SELECT id, name, extension, conversation_id, uploader_id, size, status, checksum, created_at FROM files WHERE id = $1`
 
 	var file File
 	err := s.db.QueryRowContext(ctx, query, fileID).Scan(
@@ -134,11 +134,11 @@ func (s *FileStore) DeleteUploadSession(ctx context.Context, sessionID int64) er
 
 func (s *FileStore) InsertFileChunk(ctx context.Context, fileChunk *FileChunk) error {
 	log.Printf("FileStore.InsertFileChunk: Inserting chunk %d for session ID %d", fileChunk.Index, fileChunk.SessionID)
-	query := `INSERT INTO uploaded_chunks (chunk_index, upload_session_id, created_at, checksum) 
-						VALUES ($1, $2, $3, $4) 
+	query := `INSERT INTO uploaded_chunks (chunk_index, upload_session_id, created_at, checksum, size) 
+						VALUES ($1, $2, $3, $4, $5) 
 						RETURNING id`
 
-	err := s.db.QueryRowContext(ctx, query, fileChunk.Index, fileChunk.SessionID, fileChunk.CreatedAt, fileChunk.Checksum).Scan(&fileChunk.ID)
+	err := s.db.QueryRowContext(ctx, query, fileChunk.Index, fileChunk.SessionID, fileChunk.CreatedAt, fileChunk.Checksum, fileChunk.Size).Scan(&fileChunk.ID)
 	if err != nil {
 		log.Printf("FileStore.InsertFileChunk: Failed to insert chunk %d for session %d: %v", fileChunk.Index, fileChunk.SessionID, err)
 		return err
@@ -150,7 +150,7 @@ func (s *FileStore) InsertFileChunk(ctx context.Context, fileChunk *FileChunk) e
 
 func (s *FileStore) DeleteFileChunksFromUploadSession(ctx context.Context, sessionID int64) error {
 	log.Printf("FileStore.DeleteFileChunksFromUploadSession: Deleting chunks for session ID %d", sessionID)
-	query := `DELETE FROM uploaded_chunks WHERE session_id = $1`
+	query := `DELETE FROM uploaded_chunks WHERE upload_session_id = $1`
 	_, err := s.db.ExecContext(ctx, query, sessionID)
 	if err != nil {
 		log.Printf("FileStore.DeleteFileChunksFromUploadSession: Failed to delete chunks for session %d: %v", sessionID, err)
@@ -163,7 +163,7 @@ func (s *FileStore) DeleteFileChunksFromUploadSession(ctx context.Context, sessi
 
 func (s *FileStore) GetChunksCountForSession(ctx context.Context, sessionID int64) (int64, error) {
 	log.Printf("FileStore.GetChunksCountForSession: Counting chunks for session ID %d", sessionID)
-	query := `SELECT COUNT(*) FROM uploaded_chunks WHERE session_id = $1`
+	query := `SELECT COUNT(*) FROM uploaded_chunks WHERE upload_session_id = $1`
 	var count int64
 	err := s.db.QueryRowContext(ctx, query, sessionID).Scan(&count)
 	if err != nil {

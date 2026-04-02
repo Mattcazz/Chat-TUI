@@ -104,4 +104,5 @@ type UploadFileChunkRequest struct {
 	ChunkIndex int64  `json:"chunk_index"`
 	ChunkData  []byte `json:"chunk_data"`
 	Checksum   string `json:"checksum"`
+	Size       int64  `json:"size"`
 }

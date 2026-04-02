@@ -108,6 +108,7 @@ func (s *Service) UploadFileChunk(ctx context.Context, sessionID int64, uploadCh
 		Index:     uploadChunkReq.ChunkIndex,
 		SessionID: sessionID,
 		CreatedAt: time.Now(),
+		Size:      uploadChunkReq.Size,
 		Checksum:  uploadChunkReq.Checksum,
 	}
 
@@ -128,7 +129,7 @@ func (s *Service) UploadFileChunk(ctx context.Context, sessionID int64, uploadCh
 		return err
 	}
 
-	if n != len(uploadChunkReq.ChunkData) {
+	if int64(n) != uploadChunkReq.Size {
 		os.Remove(path)
 		return fmt.Errorf("failed to write the entire chunk data to file, expected %d bytes but wrote %d bytes", len(uploadChunkReq.ChunkData), n)
 	}
@@ -187,6 +188,12 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 
 	filename := fmt.Sprintf("file-%d%s", session.FileID, file.Extension)
 	finalPath := filepath.Join(string(FinalUploadsPath), filename)
+
+	log.Printf("Service.FinalizeFileUpload: Ensuring final uploads directory exists at: %s", FinalUploadsPath)
+	err = os.MkdirAll(string(FinalUploadsPath), os.ModePerm)
+	if err != nil {
+		return fmt.Errorf("failed to create final uploads directory: %w", err)
+	}
 
 	log.Printf("Service.FinalizeFileUpload: Creating final file at: %s", finalPath)
 	finalFile, err := os.Create(finalPath)
