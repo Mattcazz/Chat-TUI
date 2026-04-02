@@ -3,8 +3,10 @@ package file
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net/http"
+	"os"
 	"strconv"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
@@ -134,7 +136,33 @@ func (h *Handler) statusCheck(w http.ResponseWriter, r *http.Request) {
 func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 	fileIDStr := chi.URLParam(r, "file_id")
 	log.Printf("Handler.downloadFile: Download requested for file ID %s", fileIDStr)
-	log.Printf("Handler.downloadFile: Endpoint not yet implemented")
+
+	fileID, err := strconv.Atoi(fileIDStr)
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusBadRequest, fmt.Errorf("invalid file ID format"))
+		return
+	}
+
+	file, err := h.service.GetFile(r.Context(), int64(fileID))
+	if err != nil {
+		utils.WriteJSONError(w, http.StatusInternalServerError, err)
+		return
+	}
+
+	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.FileName))
+	w.Header().Set("Content-Type", "application/octet-stream")
+	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Size))
+
+	log.Printf("Handler.downloadFile: Serving file %s (ID %d) for download, size: %d bytes", file.FileName, file.ID, file.Size)
+	f, err := os.Open(file.StoragePath)
+	if err != nil {
+		log.Printf("Handler.downloadFile: Failed to open file for download: %v", err)
+		utils.WriteJSONError(w, http.StatusInternalServerError, fmt.Errorf("failed to open file for download"))
+	}
+	defer f.Close()
+
+	w.WriteHeader(http.StatusOK)
+	io.Copy(w, f)
 }
 
 func (h *Handler) cancelUpload(w http.ResponseWriter, r *http.Request) {

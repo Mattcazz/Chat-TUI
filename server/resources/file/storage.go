@@ -26,7 +26,7 @@ func (s *FileStore) WithTx(tx *sql.Tx) *FileStore {
 
 func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
 	log.Printf("FileStore.GetFile: Retrieving file with ID %d", fileID)
-	query := `SELECT id, name, extension, conversation_id, uploader_id, size, status, checksum, created_at FROM files WHERE id = $1`
+	query := `SELECT id, name, extension, conversation_id, uploader_id, size, status, storage_path,checksum, created_at FROM files WHERE id = $1`
 
 	var file File
 	err := s.db.QueryRowContext(ctx, query, fileID).Scan(
@@ -37,6 +37,7 @@ func (s *FileStore) GetFile(ctx context.Context, fileID int64) (*File, error) {
 		&file.UploaderID,
 		&file.Size,
 		&file.Status,
+		&file.StoragePath,
 		&file.Checksum,
 		&file.CreatedAt,
 	)

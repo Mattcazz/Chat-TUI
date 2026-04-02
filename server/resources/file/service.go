@@ -289,7 +289,7 @@ func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSes
 		return err
 	}
 
-	log.Printf("Service.finalizeFileUploadOnDB: Updating file ID %d status to ready", session.FileID)
+	log.Printf("Service.finalizeFileUploadOnDB: Updating file record with final storage path: %s and status ready for file ID %d", finalPath, session.FileID)
 	if err := s.fileRepo.WithTx(tx).UpdateFileStatusAndPath(ctx, session.FileID, FileStatusReady, finalPath); err != nil {
 		return err
 	}
@@ -306,6 +306,17 @@ func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSes
 
 	log.Printf("Service.finalizeFileUploadOnDB: Database finalization completed successfully")
 	return nil
+}
+
+func (s *Service) GetFile(ctx context.Context, fileID int64) (*File, error) {
+	file, err := s.fileRepo.GetFile(ctx, fileID)
+	if err != nil {
+		return nil, fmt.Errorf("failed to retrieve file with ID %d: %w", fileID, err)
+	}
+
+	log.Printf("Service.GetFile: Retrieved file metadata - ID: %d, StoragePath: %s, extension: %s, size: %d bytes", file.ID, file.StoragePath, file.Extension, file.Size)
+
+	return file, nil
 }
 
 func (s *Service) DeleteSessionChunks(ctx context.Context, sessionID int64) error {
