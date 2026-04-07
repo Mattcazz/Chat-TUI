@@ -158,6 +158,7 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Printf("Handler.downloadFile: Failed to open file for download: %v", err)
 		utils.WriteJSONError(w, http.StatusInternalServerError, fmt.Errorf("failed to open file for download"))
+		return
 	}
 	defer f.Close()
 
