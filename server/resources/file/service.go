@@ -299,6 +299,8 @@ func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSes
 		return err
 	}
 
+	// TODO: add the file record to the conversation so it shows on the client side.
+
 	log.Printf("Service.finalizeFileUploadOnDB: Committing transaction")
 	if err := s.tx.Commit(tx); err != nil {
 		return err
