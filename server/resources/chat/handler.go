@@ -53,7 +53,7 @@ func (h *Handler) getConversation(w http.ResponseWriter, r *http.Request) {
 	}
 
 	log.Printf("Handler.getConversation: Successfully retrieved conversation ID %d", conversationID)
-	utils.WriteJSON(w, http.StatusAccepted, conversation)
+	utils.WriteJSON(w, http.StatusOK, conversation)
 }
 
 func (h *Handler) postConversationDM(w http.ResponseWriter, r *http.Request) {
