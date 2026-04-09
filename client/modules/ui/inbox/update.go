@@ -23,7 +23,6 @@ func getConversationItemList(conversations []pkg.InboxConversationResponse) []li
 		})
 		logger.Log.Printf("New conversation with %s logged", conversation.UserName)
 	}
-	logger.Log.Printf("Got %d conversations", len(itemList))
 
 	return itemList
 }
@@ -36,12 +35,12 @@ func (m *Model) updateConversationList() tea.Cmd {
 	}
 
 	conversationItemList := getConversationItemList(inboxResponse.Conversations)
-	logger.Log.Printf("Ended up with %d conversations", len(conversationItemList))
 	cmd := m.conversationList.SetItems(conversationItemList)
 
 	// Now we update "global" vars
 	user.UserData.UserID = inboxResponse.User.ID
 	user.UserData.UserName = inboxResponse.User.Username
+	logger.Log.Printf("Setting global username to '%s'", inboxResponse.User.Username)
 
 	return cmd
 }
@@ -66,6 +65,16 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		switch msg.Type {
 		case tea.KeyCtrlC, tea.KeyEsc:
 			return m, tea.Quit
+		case tea.KeyEnter:
+			selectedItem := m.conversationList.SelectedItem()
+			inboxConversation, ok := selectedItem.(*types.InboxConversation)
+			if !ok {
+				// Invalid item?
+				logger.Log.Panicf("Unable to cast item '%s' back to InboxConversation", selectedItem.FilterValue())
+			}
+			
+			openChatCmd := commands.NewOpenChatCmd(inboxConversation.UserName, inboxConversation.ID)
+			return m, openChatCmd
 		}
 	case commands.UpdateInboxMsg:
 		return m, m.updateConversationList()

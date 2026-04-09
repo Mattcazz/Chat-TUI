@@ -44,7 +44,7 @@ func New() App {
 		state: types.LoginView,
 		loginModel: login.NewLoginModel(client),
 		inboxModel: inbox.NewInboxModel(client),
-		chatModel: chat.New(),
+		chatModel: chat.NewChatModel(client),
 		client: client,
 		err: nil,
 	}
@@ -66,6 +66,14 @@ func (m App) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		logger.Log.Printf("[APP] Changing state to: %s", msg.State)
 		m.state = msg.State
 		return m, nil
+	case commands.OpenChatMsg:
+		logger.Log.Printf("[APP] Opening chat with %s", msg.Username)
+		m.chatModel, cmd = m.chatModel.Update(msg)
+		return m, tea.Batch(
+			cmd,
+			commands.NewChangeStateCmd(types.ChatView),
+		)
+
 	case commands.LogInMsg:
 		logger.Log.Printf("[APP] Successfully logged in")
 		logger.Log.Printf("[APP] Switching to inbox view")

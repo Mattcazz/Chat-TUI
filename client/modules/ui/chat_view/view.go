@@ -23,9 +23,10 @@ func (m Model) View() string {
 	// 	Faint(true).
 	// 	Foreground(lipgloss.Color("#888888"))
 
+	// order of messages is "backwards" (see model.go)
 	for _, msg := range m.messages {
-		content.WriteString(authorStyle.Render(msg.author))
-		content.WriteString(messageStyle.Render(msg.message))
+		content.WriteString(authorStyle.Render(msg.Author))
+		content.WriteString(messageStyle.Render(msg.Message))
 		content.WriteByte('\n')
 	}
 
