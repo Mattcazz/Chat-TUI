@@ -127,6 +127,7 @@ func (h *Handler) assembleFile(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
+// TODO: Do we want this function
 func (h *Handler) statusCheck(w http.ResponseWriter, r *http.Request) {
 	sessionIDStr := chi.URLParam(r, "session_id")
 	log.Printf("Handler.statusCheck: Status check requested for session ID %s", sessionIDStr)
@@ -166,6 +167,7 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, f)
 }
 
+// TODO: Do we want this function
 func (h *Handler) cancelUpload(w http.ResponseWriter, r *http.Request) {
 	sessionIDStr := chi.URLParam(r, "session_id")
 	log.Printf("Handler.cancelUpload: Cancel upload requested for session ID %s", sessionIDStr)

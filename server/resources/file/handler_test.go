@@ -34,18 +34,18 @@ func newTestHandler(repo FileRepository) *Handler {
 }
 
 type mockFileRepo struct {
-	withTxFn                     func(tx *sql.Tx) *FileStore
-	getFileFn                    func(ctx context.Context, fileID int64) (*File, error)
-	createFileFn                 func(ctx context.Context, file *File) error
-	deleteFileFn                 func(ctx context.Context, fileID int64) error
-	initUploadSessionFn          func(ctx context.Context, uploadSession *UploadSession) error
-	deleteUploadSessionFn        func(ctx context.Context, sessionID int64) error
-	insertFileChunkFn            func(ctx context.Context, fileChunk *FileChunk) error
-	deleteFileChunksFromSessFn   func(ctx context.Context, sessionID int64) error
-	getChunksCountForSessionFn   func(ctx context.Context, sessionID int64) (int64, error)
-	updateFileStatusAndPathFn    func(ctx context.Context, fileID int64, status FileStatus, finalPath string) error
-	updateUploadSessionStatusFn  func(ctx context.Context, sessionID int64, status UploadSessionStatus) error
-	getUploadSessionFn           func(ctx context.Context, sessionID int64) (*UploadSession, error)
+	withTxFn                    func(tx *sql.Tx) *FileStore
+	getFileFn                   func(ctx context.Context, fileID int64) (*File, error)
+	createFileFn                func(ctx context.Context, file *File) error
+	deleteFileFn                func(ctx context.Context, fileID int64) error
+	initUploadSessionFn         func(ctx context.Context, uploadSession *UploadSession) error
+	deleteUploadSessionFn       func(ctx context.Context, sessionID int64) error
+	insertFileChunkFn           func(ctx context.Context, fileChunk *FileChunk) error
+	deleteFileChunksFromSessFn  func(ctx context.Context, sessionID int64) error
+	getChunksCountForSessionFn  func(ctx context.Context, sessionID int64) (int64, error)
+	updateFileStatusAndPathFn   func(ctx context.Context, fileID int64, status FileStatus, finalPath string) error
+	updateUploadSessionStatusFn func(ctx context.Context, sessionID int64, status UploadSessionStatus) error
+	getUploadSessionFn          func(ctx context.Context, sessionID int64) (*UploadSession, error)
 }
 
 func (m *mockFileRepo) WithTx(tx *sql.Tx) *FileStore {
