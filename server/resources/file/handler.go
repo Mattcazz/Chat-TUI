@@ -30,6 +30,7 @@ func (h *Handler) RegisterRoutes(r *chi.Mux) {
 		r.Post("/init", middleware.JWTAuth(h.fileInit))
 		r.Post("/upload/{session_id}/chunks", middleware.JWTAuth(h.uploadChunk))
 		r.Post("/upload/{session_id}/assemble", middleware.JWTAuth(h.assembleFile))
+		r.Post("/upload/{session_id}/cancel", middleware.JWTAuth(h.cancelUpload))
 		r.Get("/upload/{session_id}/status", middleware.JWTAuth(h.statusCheck))
 		r.Get("/download/{file_id}", middleware.JWTAuth(h.downloadFile))
 		r.Delete("/upload/{session_id}", middleware.JWTAuth(h.cancelUpload))
@@ -58,7 +59,6 @@ func (h *Handler) fileInit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Handler.fileInit: Calling service to initialize upload")
 	resp, err := h.service.InitFileUpload(r.Context(), fileInitReq)
 	if err != nil {
 		log.Printf("Handler.fileInit: Service failed to initialize upload: %v", err)
@@ -150,6 +150,7 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Headers that i've seen in the internet for file downloads, not sure if we need all of them but here they are for reference:
 	w.Header().Set("Content-Disposition", fmt.Sprintf("attachment; filename=%s", file.FileName))
 	w.Header().Set("Content-Type", "application/octet-stream")
 	w.Header().Set("Content-Length", fmt.Sprintf("%d", file.Size))
@@ -167,9 +168,25 @@ func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
 	io.Copy(w, f)
 }
 
-// TODO: Do we want this function
 func (h *Handler) cancelUpload(w http.ResponseWriter, r *http.Request) {
 	sessionIDStr := chi.URLParam(r, "session_id")
+
 	log.Printf("Handler.cancelUpload: Cancel upload requested for session ID %s", sessionIDStr)
-	log.Printf("Handler.cancelUpload: Endpoint not yet implemented")
+
+	sessionID, err := strconv.Atoi(sessionIDStr)
+	if err != nil {
+		log.Printf("Handler.cancelUpload: Invalid session ID format: %v", err)
+		utils.WriteJSONError(w, http.StatusBadRequest, fmt.Errorf("invalid session ID format"))
+		return
+	}
+
+	log.Printf("Handler.cancelUpload: Calling service to cancel upload for session ID %d", sessionID)
+	err = h.service.CancelUploadSession(r.Context(), int64(sessionID))
+	if err != nil {
+		log.Printf("Handler.cancelUpload: Service failed to cancel upload: %v", err)
+		utils.WriteJSONError(w, http.StatusInternalServerError, err)
+		return
+	}
+	log.Printf("Handler.cancelUpload: Successfully canceled upload for session ID %d", sessionID)
+	w.WriteHeader(http.StatusOK)
 }

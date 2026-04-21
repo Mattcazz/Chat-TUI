@@ -21,6 +21,7 @@ const (
 	FileSessionStatusUploading  UploadSessionStatus = "uploading"
 	FileSessionStatusAssembling UploadSessionStatus = "assembling"
 	FileSessionStatusCompleted  UploadSessionStatus = "completed"
+	FileSessionStatusCanceled   UploadSessionStatus = "canceled"
 	FileSessionStatusPending    UploadSessionStatus = "pending"
 )
 

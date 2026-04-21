@@ -1,4 +1,4 @@
-CREATE TYPE upload_status AS ENUM ('pending', 'uploading', 'assembling', 'completed');
+CREATE TYPE upload_status AS ENUM ('canceled', 'pending', 'uploading', 'assembling', 'completed');
 
 CREATE TABLE upload_sessions (
     id BIGSERIAL PRIMARY KEY,

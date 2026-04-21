@@ -325,3 +325,39 @@ func (s *Service) DeleteSessionChunks(ctx context.Context, sessionID int64) erro
 	log.Printf("Service.DeleteSessionChunks: Function not yet implemented for session ID %d", sessionID)
 	return nil
 }
+
+func (s *Service) CancelUploadSession(ctx context.Context, sessionID int64) error {
+	log.Printf("Service.CancelUpload: Canceling upload for session ID %d", sessionID)
+
+	tx, err := s.tx.StartTx(ctx)
+	if err != nil {
+		return err
+	}
+
+	defer s.tx.RollBack(tx)
+
+	log.Printf("Service.CancelUpload: Deleting chunk records for session %d", sessionID)
+	if err := s.fileRepo.WithTx(tx).DeleteFileChunksFromUploadSession(ctx, sessionID); err != nil {
+		return err
+	}
+
+	log.Printf("Service.CancelUpload: Updating session ID %d status to canceled", sessionID)
+	if err := s.fileRepo.WithTx(tx).UpdateUploadSessionStatus(ctx, sessionID, FileSessionStatusCanceled); err != nil {
+		return err
+	}
+
+	sessionDir := filepath.Join(string(TmpUploadsPath), fmt.Sprintf("session-%d", sessionID))
+	log.Printf("Service.CancelUpload: Cleaning up temporary directory: %s", sessionDir)
+	err = os.RemoveAll(sessionDir)
+	if err != nil {
+		return fmt.Errorf("failed to remove temporary upload session directory: %w", err)
+	}
+
+	log.Printf("Service.CancelUpload: Committing transaction for canceled upload session ID %d", sessionID)
+	if err := s.tx.Commit(tx); err != nil {
+		return err
+	}
+
+	log.Printf("Service.CancelUpload: Successfully canceled upload for session ID %d", sessionID)
+	return nil
+}
