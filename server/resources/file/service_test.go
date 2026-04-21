@@ -10,15 +10,17 @@ import (
 	"time"
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
+	"github.com/Mattcazz/Chat-TUI/server/resources/chat"
 )
 
-func newTestService(repo FileRepository) *Service {
-	return NewService(repo, nil)
+func newTestService(repo FileRepository, chatRepo chat.ConversationRepository) *Service {
+	return NewService(repo, chatRepo, nil)
 }
 
 func TestService_UploadFileChunk_OK(t *testing.T) {
 	repo := &mockFileRepo{}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	sessionDir := filepath.Join(string(TmpUploadsPath), "session-25")
 	if err := os.MkdirAll(sessionDir, 0o755); err != nil {
@@ -45,7 +47,8 @@ func TestService_UploadFileChunk_OK(t *testing.T) {
 
 func TestService_UploadFileChunk_SizeMismatch(t *testing.T) {
 	repo := &mockFileRepo{}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	sessionDir := filepath.Join(string(TmpUploadsPath), "session-26")
 	if err := os.MkdirAll(sessionDir, 0o755); err != nil {
@@ -80,7 +83,8 @@ func TestService_UploadFileChunk_InsertErrorRemovesFile(t *testing.T) {
 			return errors.New("insert failed")
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	sessionDir := filepath.Join(string(TmpUploadsPath), "session-27")
 	if err := os.MkdirAll(sessionDir, 0o755); err != nil {
@@ -106,7 +110,8 @@ func TestService_FinalizeFileUpload_SessionNotFound(t *testing.T) {
 			return nil, nil
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	err := svc.FinalizeFileUpload(context.Background(), 100)
 	if err == nil {
@@ -120,7 +125,8 @@ func TestService_FinalizeFileUpload_SessionError(t *testing.T) {
 			return nil, errors.New("db error")
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	if err := svc.FinalizeFileUpload(context.Background(), 100); err == nil {
 		t.Fatal("expected error, got nil")
@@ -133,7 +139,8 @@ func TestService_FinalizeFileUpload_InvalidStatus(t *testing.T) {
 			return &UploadSession{ID: 1, FileID: 1, TotalChunks: 2, Status: FileSessionStatusCompleted}, nil
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	err := svc.FinalizeFileUpload(context.Background(), 1)
 	if err == nil {
@@ -150,7 +157,8 @@ func TestService_FinalizeFileUpload_ChunkCountMismatch(t *testing.T) {
 			return 1, nil
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	err := svc.FinalizeFileUpload(context.Background(), 1)
 	if err == nil {
@@ -167,7 +175,8 @@ func TestService_FinalizeFileUpload_GetChunksError(t *testing.T) {
 			return 0, errors.New("count error")
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	if err := svc.FinalizeFileUpload(context.Background(), 1); err == nil {
 		t.Fatal("expected error, got nil")
@@ -186,7 +195,8 @@ func TestService_FinalizeFileUpload_GetFileError(t *testing.T) {
 			return nil, errors.New("get file error")
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	if err := svc.FinalizeFileUpload(context.Background(), 1); err == nil {
 		t.Fatal("expected error, got nil")
@@ -203,7 +213,8 @@ func TestService_GetFile_OK(t *testing.T) {
 			return expected, nil
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	file, err := svc.GetFile(context.Background(), 5)
 	if err != nil {
@@ -220,7 +231,8 @@ func TestService_GetFile_Error(t *testing.T) {
 			return nil, errors.New("db")
 		},
 	}
-	svc := newTestService(repo)
+	chatRepo := &mockConversationRepo{}
+	svc := newTestService(repo, chatRepo)
 
 	if _, err := svc.GetFile(context.Background(), 5); err == nil {
 		t.Fatal("expected error, got nil")
@@ -228,7 +240,7 @@ func TestService_GetFile_Error(t *testing.T) {
 }
 
 func TestService_DeleteSessionChunks_NoOp(t *testing.T) {
-	svc := newTestService(&mockFileRepo{})
+	svc := newTestService(&mockFileRepo{}, &mockConversationRepo{})
 	if err := svc.DeleteSessionChunks(context.Background(), 1); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}

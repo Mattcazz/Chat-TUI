@@ -75,6 +75,7 @@ type CreateConversationDmRequest struct {
 type MsgResponse struct {
 	UserName  string    `json:"username"`
 	Content   string    `json:"content"`
+	Type      MsgType   `json:"type"`
 	CreatedAt time.Time `json:"created_at"`
 }
 

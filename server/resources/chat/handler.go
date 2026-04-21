@@ -105,7 +105,9 @@ func (h *Handler) postMessageInConversation(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.convService.PostConversationMsg(r.Context(), senderID.(int64), int64(conversationID), msgReq.Content); err != nil {
+	// this is the endpoint to post text messages, so the type is always MsgTypeText
+	// file resource will have a different endpoint and will specify the type in the request body
+	if err := h.convService.PostConversationMsg(r.Context(), senderID.(int64), int64(conversationID), msgReq.Content, pkg.MsgTypeText); err != nil {
 		log.Printf("Handler.postMessageInConversation: Failed to post message to conversation ID %d: %v", conversationID, err)
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return

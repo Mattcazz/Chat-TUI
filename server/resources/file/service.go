@@ -11,16 +11,19 @@ import (
 
 	"github.com/Mattcazz/Chat-TUI/pkg"
 	"github.com/Mattcazz/Chat-TUI/server/db"
+	"github.com/Mattcazz/Chat-TUI/server/resources/chat"
 )
 
 type Service struct {
 	fileRepo FileRepository
+	chatRepo chat.ConversationRepository
 	tx       *db.TxManager
 }
 
-func NewService(fr FileRepository, tx *db.TxManager) *Service {
+func NewService(fr FileRepository, cr chat.ConversationRepository, tx *db.TxManager) *Service {
 	return &Service{
 		fileRepo: fr,
+		chatRepo: cr,
 		tx:       tx,
 	}
 }
@@ -28,6 +31,12 @@ func NewService(fr FileRepository, tx *db.TxManager) *Service {
 func (s *Service) InitFileUpload(ctx context.Context, initFileReq *pkg.InitFileUploadRequest) (*pkg.InitFileUploadResponse, error) {
 	log.Printf("Service.InitFileUpload: Initiating file upload - filename: %s, size: %d bytes, chunks: %d, conversation ID: %d",
 		initFileReq.FileName, initFileReq.TotalSize, initFileReq.TotalChunks, initFileReq.ConversationID)
+
+	// TODO: we pass 0 because we don't load the messages for the conversation but maybe this is weird.
+	if _, err := s.chatRepo.GetConversation(ctx, initFileReq.ConversationID, 0); err != nil {
+		log.Printf("Service.InitFileUpload: Conversation ID %d not found: %v", initFileReq.ConversationID, err)
+		return nil, fmt.Errorf("conversation with id %d not found: %w", initFileReq.ConversationID, err)
+	}
 
 	fileName := SanitizeFileName(initFileReq.FileName)
 	fileExtenstion := GetFileExtension(fileName)
@@ -214,7 +223,7 @@ func (s *Service) FinalizeFileUpload(ctx context.Context, sessionID int64) error
 	}
 
 	log.Printf("Service.FinalizeFileUpload: File assembled successfully, starting database finalization")
-	if err := s.finalizeFileUploadOnDB(ctx, session, finalPath); err != nil {
+	if err := s.finalizeFileUploadOnDB(ctx, session, file, finalPath); err != nil {
 		return err
 	}
 
@@ -273,7 +282,7 @@ func assembleFile(finalFile *os.File, finalPath string, file *File, session *Upl
 	return nil
 }
 
-func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSession, finalPath string) error {
+func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSession, file *File, finalPath string) error {
 	log.Printf("Service.finalizeFileUploadOnDB: Starting database finalization for session ID %d, file ID %d",
 		session.ID, session.FileID)
 
@@ -299,7 +308,20 @@ func (s *Service) finalizeFileUploadOnDB(ctx context.Context, session *UploadSes
 		return err
 	}
 
-	// TODO: add the file record to the conversation so it shows on the client side.
+	msg := &chat.Message{
+		SenderID:       file.UploaderID,
+		ConversationID: file.ConversationID,
+		Content:        fmt.Sprintf("File uploaded: %s", file.FileName), // TODO: decide what needs to be in file msg content
+		Type:           pkg.MsgTypeFile,
+		CreatedAt:      time.Now(),
+	}
+
+	log.Printf("Service.finalizeFileUploadOnDB: Inserting file message into conversation ID %d", file.ConversationID)
+	if _, err := s.chatRepo.WithTx(tx).CreateMessage(ctx, msg); err != nil {
+		return err
+	}
+
+	log.Printf("Service.finalizeFileUploadOnDB: File message inserted successfully into conversation ID %d", file.ConversationID)
 
 	log.Printf("Service.finalizeFileUploadOnDB: Committing transaction")
 	if err := s.tx.Commit(tx); err != nil {
@@ -319,11 +341,6 @@ func (s *Service) GetFile(ctx context.Context, fileID int64) (*File, error) {
 	log.Printf("Service.GetFile: Retrieved file metadata - ID: %d, StoragePath: %s, extension: %s, size: %d bytes", file.ID, file.StoragePath, file.Extension, file.Size)
 
 	return file, nil
-}
-
-func (s *Service) DeleteSessionChunks(ctx context.Context, sessionID int64) error {
-	log.Printf("Service.DeleteSessionChunks: Function not yet implemented for session ID %d", sessionID)
-	return nil
 }
 
 func (s *Service) CancelUploadSession(ctx context.Context, sessionID int64) error {
