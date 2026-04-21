@@ -31,7 +31,6 @@ func (h *Handler) RegisterRoutes(r *chi.Mux) {
 		r.Post("/upload/{session_id}/chunks", middleware.JWTAuth(h.uploadChunk))
 		r.Post("/upload/{session_id}/assemble", middleware.JWTAuth(h.assembleFile))
 		r.Post("/upload/{session_id}/cancel", middleware.JWTAuth(h.cancelUpload))
-		r.Get("/upload/{session_id}/status", middleware.JWTAuth(h.statusCheck))
 		r.Get("/download/{file_id}", middleware.JWTAuth(h.downloadFile))
 		r.Delete("/upload/{session_id}", middleware.JWTAuth(h.cancelUpload))
 	})
@@ -125,13 +124,6 @@ func (h *Handler) assembleFile(w http.ResponseWriter, r *http.Request) {
 
 	log.Printf("Handler.assembleFile: Successfully assembled file for session ID %d", sessionID)
 	w.WriteHeader(http.StatusOK)
-}
-
-// TODO: Do we want this function
-func (h *Handler) statusCheck(w http.ResponseWriter, r *http.Request) {
-	sessionIDStr := chi.URLParam(r, "session_id")
-	log.Printf("Handler.statusCheck: Status check requested for session ID %s", sessionIDStr)
-	log.Printf("Handler.statusCheck: Endpoint not yet implemented")
 }
 
 func (h *Handler) downloadFile(w http.ResponseWriter, r *http.Request) {
