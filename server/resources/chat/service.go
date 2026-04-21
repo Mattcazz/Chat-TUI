@@ -23,12 +23,13 @@ func NewService(conversationRepo ConversationRepository, tx *db.TxManager, broke
 	}
 }
 
-func (s *Service) PostConversationMsg(ctx context.Context, senderID, convID int64, content string) error {
+func (s *Service) PostConversationMsg(ctx context.Context, senderID, convID int64, content string, msgType pkg.MsgType) error {
 	log.Printf("Service.PostConversationMsg: Posting message to conversation ID %d from user ID %d", convID, senderID)
 	msg := &Message{
 		SenderID:       senderID,
 		ConversationID: convID,
 		Content:        content,
+		Type:           msgType,
 		CreatedAt:      time.Now(),
 	}
 

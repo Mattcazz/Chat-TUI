@@ -22,10 +22,11 @@ type ConversationRepository interface {
 }
 
 type Message struct {
-	SenderID       int64     `json:"sender_id"`
-	Content        string    `json:"content"`
-	ConversationID int64     `json:"conversation_id"`
-	CreatedAt      time.Time `json:"created_at"`
+	SenderID       int64       `json:"sender_id"`
+	Content        string      `json:"content"`
+	ConversationID int64       `json:"conversation_id"`
+	Type           pkg.MsgType `json:"type"`
+	CreatedAt      time.Time   `json:"created_at"`
 }
 
 type Conversation struct {

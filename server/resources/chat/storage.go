@@ -43,18 +43,18 @@ func (s *ConversationStore) AddParticipantToConversation(ctx context.Context, co
 func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) (*pkg.MsgResponse, error) {
 	log.Printf("ConversationStore.CreateMessage: Creating message in conversation ID %d from sender ID %d", msg.ConversationID, msg.SenderID)
 	query := `WITH inserted as (
-						INSERT INTO messages (conversation_id, sender_id, content, created_at)
-						VALUES ($1, $2, $3, $4)
+						INSERT INTO messages (conversation_id, sender_id, content, created_at, message_type)
+						VALUES ($1, $2, $3, $4, $5)
 						RETURNING *),
 						updated_conversation as (
 						UPDATE conversations SET last_message_at = $4, last_message_preview = $3
 						WHERE id = $1
 						RETURNING id)
 
-						SELECT u.username, inserted.content, inserted.created_at
+						SELECT u.username, inserted.content, inserted.created_at, inserted.message_type
 						FROM inserted JOIN users u ON inserted.sender_id = u.id`
 
-	rows, err := s.db.QueryContext(ctx, query, msg.ConversationID, msg.SenderID, msg.Content, msg.CreatedAt)
+	rows, err := s.db.QueryContext(ctx, query, msg.ConversationID, msg.SenderID, msg.Content, msg.CreatedAt, msg.Type)
 	if err != nil {
 		log.Printf("ConversationStore.CreateMessage: Failed to create message in conversation ID %d: %v", msg.ConversationID, err)
 		return nil, err
@@ -63,7 +63,7 @@ func (s *ConversationStore) CreateMessage(ctx context.Context, msg *Message) (*p
 
 	if rows.Next() {
 		response := &pkg.MsgResponse{}
-		if err := rows.Scan(&response.UserName, &response.Content, &response.CreatedAt); err != nil {
+		if err := rows.Scan(&response.UserName, &response.Content, &response.CreatedAt, &response.Type); err != nil {
 			log.Printf("ConversationStore.CreateMessage: Failed to scan message response in conversation ID %d: %v", msg.ConversationID, err)
 			return nil, err
 		}
@@ -91,10 +91,10 @@ func (s *ConversationStore) DeleteMessage(ctx context.Context, msgID int64) erro
 
 func (s *ConversationStore) GetMessage(ctx context.Context, id int64) (*Message, error) {
 	log.Printf("ConversationStore.GetMessage: Retrieving message with ID %d", id)
-	query := `SELECT sender_id, content, conversation_id, created_at FROM messages WHERE id = $1`
+	query := `SELECT sender_id, content, conversation_id, created_at, message_type FROM messages WHERE id = $1`
 
 	var msg Message
-	err := s.db.QueryRowContext(ctx, query, id).Scan(&msg.SenderID, &msg.Content, &msg.ConversationID, &msg.CreatedAt)
+	err := s.db.QueryRowContext(ctx, query, id).Scan(&msg.SenderID, &msg.Content, &msg.ConversationID, &msg.CreatedAt, &msg.Type)
 	if err != nil {
 		log.Printf("ConversationStore.GetMessage: Failed to retrieve message with ID %d: %v", id, err)
 		return nil, err
@@ -149,7 +149,7 @@ func (s *ConversationStore) EditConversation(ctx context.Context, conversation *
 
 func (s *ConversationStore) GetConversation(ctx context.Context, id, limit int64) (*pkg.ConversationResponse, error) {
 	log.Printf("ConversationStore.GetConversation: Retrieving conversation ID %d with limit %d", id, limit)
-	query := `SELECT m.content, u.username, m.created_at
+	query := `SELECT m.content, u.username, m.created_at, m.message_type	
 						FROM messages m
 						LEFT JOIN users u
 						ON m.sender_id = u.id
@@ -170,7 +170,7 @@ func (s *ConversationStore) GetConversation(ctx context.Context, id, limit int64
 
 	for rows.Next() {
 		var msg pkg.MsgResponse
-		if err := rows.Scan(&msg.Content, &msg.UserName, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(&msg.Content, &msg.UserName, &msg.CreatedAt, &msg.Type); err != nil {
 			log.Printf("ConversationStore.GetConversation: Failed to scan message row for conversation ID %d: %v", id, err)
 			return nil, err
 		}
@@ -197,7 +197,7 @@ func (s *ConversationStore) GetConversationDM(ctx context.Context, firstID, seco
 						SELECT conversation_id
 						FROM conversation_participants
 						WHERE user_id = $2)
-						SELECT m.conversation_id, m.content, u.username, m.created_at
+						SELECT m.conversation_id, m.content, u.username, m.created_at, m.message_type
 						FROM messages m
 						LEFT JOIN users u ON m.sender_id = u.id
 						WHERE m.conversation_id IN (SELECT conversation_id FROM conversation)
@@ -216,7 +216,7 @@ func (s *ConversationStore) GetConversationDM(ctx context.Context, firstID, seco
 
 	for rows.Next() {
 		var msg pkg.MsgResponse
-		if err := rows.Scan(&conversation.ID, &msg.Content, &msg.UserName, &msg.CreatedAt); err != nil {
+		if err := rows.Scan(&conversation.ID, &msg.Content, &msg.UserName, &msg.CreatedAt, &msg.Type); err != nil {
 			log.Printf("ConversationStore.GetConversationDM: Failed to scan message row for DM between user ID %d and user ID %d: %v", firstID, secondID, err)
 			return nil, err
 		}

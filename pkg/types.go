@@ -75,6 +75,7 @@ type CreateConversationDmRequest struct {
 type MsgResponse struct {
 	UserName  string    `json:"username"`
 	Content   string    `json:"content"`
+	Type      MsgType   `json:"type"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
@@ -82,4 +83,27 @@ type ConversationResponse struct {
 	ID                       int64         `json:"id"`
 	OtherParticipantNickname string        `json:"other_participant_nickname"`
 	Messages                 []MsgResponse `json:"messages"`
+}
+
+// Files types
+
+type InitFileUploadRequest struct {
+	ConversationID int64  `json:"conversation_id"`
+	UploaderID     int64  `json:"uploader_id"`
+	FileName       string `json:"file_name"`
+	TotalSize      int64  `json:"total_size"`
+	TotalChunks    int64  `json:"total_chunks"`
+	Checksum       string `json:"checksum"`
+}
+
+type InitFileUploadResponse struct {
+	FileID    int64 `json:"file_id"`
+	SessionID int64 `json:"session_id"`
+}
+
+type UploadFileChunkRequest struct {
+	ChunkIndex int64  `json:"chunk_index"`
+	ChunkData  []byte `json:"chunk_data"`
+	Checksum   string `json:"checksum"`
+	Size       int64  `json:"size"`
 }
