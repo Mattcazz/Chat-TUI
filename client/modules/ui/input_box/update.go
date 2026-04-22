@@ -25,7 +25,6 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
-			logger.Log.Printf("Hit Enter on input box with global username '%s'", user.UserData.UserName)
 			cmd = commands.NewNewMessageCmd(user.UserData.UserName, m.chatInput.Value(), time.Now())
 			m.chatInput.Reset()
 			return m, cmd
