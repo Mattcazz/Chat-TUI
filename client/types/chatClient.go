@@ -20,7 +20,7 @@ func (c *ChatClient) GetChat(conversationId int64) (pkg.ConversationResponse, er
 	requestPath := fmt.Sprintf("conversation/%d", conversationId)
 	resp, err := c.Client.doRequest("GET", requestPath, nil, &conversationResponse)
 	if err != nil {
-		logger.Log.Panic("Failed to get conversation: " + err.Error())
+		logger.Log.Panicf("Failed to get conversation: %s", err.Error())
 	}
 
 	switch resp.StatusCode {

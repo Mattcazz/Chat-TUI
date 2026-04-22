@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+
+	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
 )
 
 const jwtFile = "clit.jwt"
@@ -33,7 +35,7 @@ type Config struct{
 func getConfigDir() string {
 	home, err := os.UserHomeDir()
 	if err != nil {
-		log.Panic(err.Error())
+		logger.Log.Panicf("Could not get user's home directory: %s", err.Error())
 	}
 
 	return filepath.Join(home, ".config", "clit")
@@ -56,7 +58,7 @@ func LoadConfig() {
 	data, err := os.ReadFile(jwtFilepath)
 	if err != nil {
 		// Can't read file
-		panic(err)
+		logger.Log.Panicf("Could not read file: %s", err.Error())
 	}
 	Configuration.Jwt = string(data)
 
@@ -73,7 +75,7 @@ func LoadConfig() {
 	networkConfigFile, err := os.Open(networkConfigFilepath)
 	if err != nil {
 		// Can't read file
-		panic(err)
+		logger.Log.Panicf("Could not read file: %s", err.Error())
 	}
 	json.NewDecoder(networkConfigFile).Decode(&Configuration.Network)
 
@@ -91,7 +93,7 @@ func LoadConfig() {
 	styleConfigFile, err := os.Open(styleConfigFilepath)
 	if err != nil {
 		// Can't read file
-		panic(err)
+		logger.Log.Panicf("Could not read file: %s", err.Error())
 	}
 	json.NewDecoder(styleConfigFile).Decode(&Configuration.Colors)
 
@@ -108,7 +110,7 @@ func LoadConfig() {
 	configFile, err := os.Open(configFilepath)
 	if err != nil {
 		// Can't read file
-		panic(err)
+		logger.Log.Panicf("Could not read file: %s", err.Error())
 	}
 	json.NewDecoder(configFile).Decode(&Configuration)
 }

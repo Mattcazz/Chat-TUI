@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/Mattcazz/Chat-TUI/client/internal/config"
+	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -16,14 +17,14 @@ func getSSHKeys() ([]byte, []byte) {
 	pkPath := sshKeyPath + ".pub"
 	pkBytes, err := os.ReadFile(pkPath)
 	if err != nil {
-		panic("Could not read public key: " + err.Error())
+		logger.Log.Panicf("Error reading public key: %s", err.Error())
 	}
 	pkBytes = bytes.TrimSpace(pkBytes)
 
 	skPath := sshKeyPath
 	skBytes, err := os.ReadFile(skPath)
 	if err != nil {
-		panic("Could not read private key: " + err.Error())
+		logger.Log.Panicf("Error reading private key: %s", err.Error())
 	}
 	skBytes = bytes.TrimSpace(skBytes)
 
@@ -44,14 +45,14 @@ func createSignature(nonce string, sk []byte, passphrase []byte) ([]byte, error)
 				return nil, err
 			}
 		} else {
-			panic(err)
+			logger.Log.Panicf("Error while parsing private key: %s", err.Error())
 		}
 	}
 
 	// Sign the Nonce
 	sig, err := signer.Sign(rand.Reader, []byte(nonce))
 	if err != nil {
-		panic(err)
+		logger.Log.Panicf("Error signing nonce: %s", err.Error())
 	}
 
 	// Encode to Base64 (This is what you paste into Curl)

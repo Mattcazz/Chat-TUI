@@ -49,7 +49,7 @@ func (m Model) doLoginCmd() (tea.Model, tea.Cmd) {
 	logger.Log.Printf("[NORMAL] Attempting to log in")
 	_, err := m.client.Login(m.pk, m.signature)
 	if err != nil {
-		log.Panic(err.Error())
+		logger.Log.Panicf("Error while trying to log in: %s", err.Error())
 	}
 	logger.Log.Printf("[NORMAL] Login succeeded, returning username: %s", "I don't know how to get this yet :D")
 
@@ -125,7 +125,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 					if err != nil {
 						m.state = types.NeedsUsername // should never happen, since this should trip before ssh password
 						m.usernameInput.Reset() // maybe panic? maybe fatal?
-						panic(err)
+						logger.Log.Panicf("Error while requesting challenge: %s", err.Error())
 					}
 				}
 
@@ -140,8 +140,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 						m.passwordInput, cmd = m.passwordInput.Update(msg)
 						return m, cmd
 					} else {
-						log.Panic(err.Error())
-						panic(err)
+						logger.Log.Panicf("Error while creating signature: %s", err.Error())
 					}
 				}
 

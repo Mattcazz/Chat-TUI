@@ -18,7 +18,7 @@ func (c *InboxClient) GetInbox() (pkg.InboxResponse, error) {
 	var inboxResponse pkg.InboxResponse
 	resp, err := c.Client.doRequest("GET", "inbox", nil, &inboxResponse)
 	if err != nil {
-		logger.Log.Panic("Failed to get inbox: " + err.Error())
+		logger.Log.Panicf("Failed to get inbox: %s", err.Error())
 	}
 
 	switch resp.StatusCode {

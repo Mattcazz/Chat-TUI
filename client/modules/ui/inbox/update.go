@@ -28,10 +28,10 @@ func getConversationItemList(conversations []pkg.InboxConversationResponse) []li
 }
 
 func (m *Model) updateConversationList() tea.Cmd {
-	logger.Log.Println("[INBOX] Updating conversation list")
+	logger.Log.Printf("[INBOX] Updating conversation list")
 	inboxResponse, err := m.client.GetInbox()
 	if err != nil {
-		logger.Log.Panicln("Failed to get inbox: " + err.Error())
+		logger.Log.Panicf("Failed to get inbox: %s", err.Error())
 	}
 
 	conversationItemList := getConversationItemList(inboxResponse.Conversations)
