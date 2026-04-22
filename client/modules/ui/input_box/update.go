@@ -7,11 +7,12 @@ import (
 	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
 	"github.com/Mattcazz/Chat-TUI/client/internal/user"
 
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {

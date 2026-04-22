@@ -12,7 +12,6 @@ type Model struct {
 	chatView tea.Model
 	chatInput tea.Model
 
-	username string
 	conversationId int64
 
 	client *types.ChatClient

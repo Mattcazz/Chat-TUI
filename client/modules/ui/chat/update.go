@@ -3,6 +3,7 @@ package chat
 import (
 	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
 	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
+	"github.com/Mattcazz/Chat-TUI/client/internal/user"
 	"github.com/Mattcazz/Chat-TUI/client/types"
 
 	tea "github.com/charmbracelet/bubbletea"
@@ -82,7 +83,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 		m.chatView, cmd = m.chatView.Update(msg)
 		return m, cmd
 	case commands.LogInMsg:
-		m.username = msg.Username
+		user.UserData.UserName = msg.Username
 		return m, nil
 	}
 
