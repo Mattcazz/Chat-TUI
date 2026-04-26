@@ -1,17 +1,13 @@
 package chat_view
 
 import (
-	"time"
+	"github.com/Mattcazz/Chat-TUI/client/types"
 )
 
-type Message struct {
-	author string
-	message string
-	timestamp time.Time
-}
-
 type Model struct {
-	messages[] Message
+	// First in slice is the newest message
+	// Last in slice is the oldest message
+	messages[] types.Message
 
 	err error
 	width int
@@ -20,7 +16,7 @@ type Model struct {
 
 func New() Model {
 	return Model{
-		messages: make([]Message, 0),
+		messages: make([]types.Message, 0),
 		err: nil,
 	}
 }

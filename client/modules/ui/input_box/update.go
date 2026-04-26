@@ -1,14 +1,18 @@
 package input_box
 
 import (
-	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
 	"time"
 
+	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
+	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
+	"github.com/Mattcazz/Chat-TUI/client/internal/user"
+
+	"github.com/charmbracelet/bubbles/textinput"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
 func (m Model) Init() tea.Cmd {
-	return nil
+	return textinput.Blink
 }
 
 func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
@@ -21,7 +25,7 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 	case tea.KeyMsg:
 		switch msg.Type {
 		case tea.KeyEnter:
-			cmd = commands.NewNewMessageCmd("", m.chatInput.Value(), time.Now())
+			cmd = commands.NewNewMessageCmd(user.UserData.UserName, m.chatInput.Value(), time.Now())
 			m.chatInput.Reset()
 			return m, cmd
 		case tea.KeyCtrlC, tea.KeyEsc:

@@ -2,7 +2,8 @@ package chat_view
 
 import (
 	"github.com/Mattcazz/Chat-TUI/client/internal/commands"
-
+	"github.com/Mattcazz/Chat-TUI/client/internal/logger"
+	"github.com/Mattcazz/Chat-TUI/client/types"
 	tea "github.com/charmbracelet/bubbletea"
 )
 
@@ -23,11 +24,17 @@ func (m Model) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 			return m, tea.Quit
 		}
 	case commands.NewMessageMsg:
-		var newMsg Message
-		newMsg.author = msg.Author
-		newMsg.message = msg.Message
-		newMsg.timestamp = msg.Timestamp
+		var newMsg types.Message
+		newMsg.Author = msg.Author
+		newMsg.Message = msg.Message
+		newMsg.Timestamp = msg.Timestamp
+		logger.Log.Printf("[CHAT VIEW] New message by '%s': %s", newMsg.Author, newMsg.Message)
 		m.messages = append(m.messages, newMsg)
+	case commands.LoadChatMsg:
+		m.messages = make([]types.Message, len(msg.Messages))
+		for i, message := range msg.Messages {
+			m.messages[len(msg.Messages)-1-i] = message
+		}
 	}
 
 	return m, cmd

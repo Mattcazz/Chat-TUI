@@ -16,7 +16,7 @@ func (m Model) View() string {
 	case types.Normal:
 		content = lipgloss.JoinVertical(
 			lipgloss.Center,
-			"Logging in to CLIt...",
+			"Logging in to CLIt",
 		)
 	case types.NeedsUsername:
 		content = lipgloss.JoinVertical(

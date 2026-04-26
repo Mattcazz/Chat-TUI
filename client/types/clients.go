@@ -48,8 +48,8 @@ func (c *BaseClient) doRequest(method string, path string, body interface{}, tar
 		return nil, fmt.Errorf("request failed: %w", err)
 	}
 
-	// 5. Decode Response (if target provided)
-	if target != nil {
+	// 5. Decode Response only on success
+	if target != nil && resp.StatusCode >= 200 && resp.StatusCode < 300 {
 		if err := json.NewDecoder(resp.Body).Decode(target); err != nil {
 			return nil, fmt.Errorf("failed to decode response: %w", err)
 		}
