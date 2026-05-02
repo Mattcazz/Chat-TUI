@@ -16,4 +16,4 @@ test:
 
 test-v:
 	@echo "Running server tests with verbose output..."
-	@go test ./... -v -rave
+	@go test ./... -v 

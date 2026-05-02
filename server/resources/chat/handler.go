@@ -25,7 +25,7 @@ func NewHandler(s *Service, broker *Broker) *Handler {
 }
 
 func (h *Handler) RegisterRoutes(r *chi.Mux) {
-	r.Route("/conversation", func(r chi.Router) {
+	r.Route("/conversations", func(r chi.Router) {
 		r.Post("/", middleware.JWTAuth(h.postConversationDM))
 		r.Get("/{conversation_id}", middleware.JWTAuth(h.getConversation))
 		r.Delete("/{conversation_id}", middleware.JWTAuth(h.deleteConversation))
@@ -105,7 +105,9 @@ func (h *Handler) postMessageInConversation(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	if err := h.convService.PostConversationMsg(r.Context(), senderID.(int64), int64(conversationID), msgReq.Content); err != nil {
+	// this is the endpoint to post text messages, so the type is always MsgTypeText
+	// file resource will have a different endpoint and will specify the type in the request body
+	if err := h.convService.PostConversationMsg(r.Context(), senderID.(int64), int64(conversationID), msgReq.Content, pkg.MsgTypeText); err != nil {
 		log.Printf("Handler.postMessageInConversation: Failed to post message to conversation ID %d: %v", conversationID, err)
 		utils.WriteJSONError(w, http.StatusBadRequest, err)
 		return

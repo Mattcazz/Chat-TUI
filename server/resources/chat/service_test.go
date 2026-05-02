@@ -119,7 +119,7 @@ func TestService_PostConversationMsg_PublishesToBroker(t *testing.T) {
 
 	ch := broker.Subscribe(10)
 
-	if err := svc.PostConversationMsg(context.Background(), 1, 10, "hi there"); err != nil {
+	if err := svc.PostConversationMsg(context.Background(), 1, 10, "hi there", pkg.MsgTypeText); err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
 
@@ -141,7 +141,7 @@ func TestService_PostConversationMsg_RepoError(t *testing.T) {
 	}
 	svc := newTestService(repo)
 
-	err := svc.PostConversationMsg(context.Background(), 1, 1, "hello")
+	err := svc.PostConversationMsg(context.Background(), 1, 1, "hello", pkg.MsgTypeText)
 	if err == nil {
 		t.Fatal("expected error, got nil")
 	}
@@ -150,7 +150,7 @@ func TestService_PostConversationMsg_RepoError(t *testing.T) {
 func TestService_GetOrCreateDM_ExistingConversation(t *testing.T) {
 	existing := &pkg.ConversationResponse{
 		ID:       5,
-		Messages: []pkg.MsgResponse{{UserName: "bob", Content: "hey"}},
+		Messages: []pkg.MsgResponse{{UserName: "bob", Content: "hey", Type: pkg.MsgTypeText}},
 	}
 	repo := &mockConversationRepo{
 		getConversationDMFn: func(_ context.Context, _, _, _ int64) (*pkg.ConversationResponse, error) {

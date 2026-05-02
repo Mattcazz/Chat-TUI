@@ -5,6 +5,7 @@ CREATE TABLE files (
     conversation_id BIGINT REFERENCES conversations(id) ON DELETE CASCADE,
     uploader_id BIGINT REFERENCES users(id) ON DELETE SET NULL,
     name VARCHAR(255) NOT NULL,
+    extension varchar(10),
     size BIGINT NOT NULL, 
     checksum VARCHAR(64), -- SHA256
     storage_path TEXT NOT NULL, 
